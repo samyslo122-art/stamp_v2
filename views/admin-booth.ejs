@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stamp Issue — Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script>
+    tailwind.config = { theme: { extend: { colors: { brand: { 50:'#eff6ff',100:'#dbeafe',200:'#bfdbfe',500:'#3b82f6',600:'#2563eb',700:'#1d4ed8' }}}}}
+  </script>
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    #qr-reader { border: none !important; }
+    #qr-reader video { object-fit: cover; border-radius: 1rem; }
+    .scan-overlay { position: absolute; inset: 0; border: 4px solid #3b82f6; border-radius: 1rem; animation: pulse-border 2s infinite; pointer-events: none; z-index: 10; }
+    @keyframes pulse-border { 0%, 100% { opacity: 0.3; transform: scale(0.98); } 50% { opacity: 0.7; transform: scale(1); } }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50">
+  <%- include('partials/admin-nav', { active: 'booth' }) %>
+  <%- include('partials/modal') %>
+  <main class="mx-auto max-w-4xl px-4 py-6">
+    <div class="flex items-center gap-3 mb-6">
+      <div class="h-10 w-10 rounded-xl bg-brand-600 flex items-center justify-center text-white shadow-lg">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      </div>
+      <h1 class="text-2xl font-bold text-slate-800">Stamp Station</h1>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div class="lg:col-span-5 space-y-6">
+        <div class="relative rounded-2xl bg-black aspect-square overflow-hidden shadow-xl border-4 border-white">
+          <div id="qr-reader" class="w-full h-full"></div>
+          <div id="scanner-overlay" class="scan-overlay"></div>
+        </div>
+
+        <div class="rounded-2xl border border-slate-200/60 bg-white/80 backdrop-blur-sm p-6 shadow-sm">
+          <div class="space-y-4">
+            <div>
+              <label for="boothSelect" class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Active Station</label>
+              <select id="boothSelect"
+                class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base font-bold text-slate-800 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 focus:outline-none transition-all appearance-none shadow-sm">
+                <option value="">— SELECT BOOTH —</option>
+                <% booths.forEach(function(b) { %>
+                  <option value="<%= b.key %>" data-name="<%= b.name %>">
+                    <%= b.name %> (Cat <%= b.category %>)
+                  </option>
+                <% }) %>
+              </select>
+            </div>
+            <div>
+              <label for="playerId" class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Player Unique ID</label>
+              <input id="playerId" type="text" maxlength="6"
+                class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-lg font-mono text-center uppercase focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 focus:outline-none transition-all shadow-sm"
+                placeholder="AB12C3" autocomplete="off" />
+            </div>
+            <div class="grid grid-cols-2 gap-3 pt-2">
+              <button onclick="issueStamp()" class="rounded-xl bg-emerald-600 py-4 text-sm font-bold text-white shadow-lg hover:bg-emerald-700 active:scale-95 transition-all">ISSUE STAMP</button>
+              <button onclick="revokeStamp()" class="rounded-xl bg-slate-100 py-4 text-sm font-bold text-slate-600 border border-slate-200 hover:bg-slate-200 active:scale-95 transition-all">REVOKE</button>
+            </div>
+          </div>
+          <div id="stamp-msg" class="hidden mt-4 rounded-xl p-4 text-sm font-medium border text-center"></div>
+        </div>
+      </div>
+
+      <div class="lg:col-span-7 space-y-6">
+        <div class="rounded-2xl border border-slate-200/60 bg-white/80 backdrop-blur-sm p-6 shadow-sm min-h-full">
+          <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-6">Live Activity Log</h3>
+          <div id="activity-log" class="space-y-3">
+             <div class="flex flex-col items-center justify-center py-12 text-center text-slate-400">
+               <p class="text-sm">Ready to issue stamps. Activity will appear here.</p>
+             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/common.js"></script>
+  <script>
+    const csrfToken = '<%= csrfToken %>';
+    let html5QrCode = null;
+    let lastScanTime = 0;
+    const logData = [];
+
+    function addLog(msg, type, playerName) {
+      const container = document.getElementById('activity-log');
+      const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      logData.unshift({ msg, type, playerName, time });
+      if (logData.length > 20) logData.pop();
+      
+      container.innerHTML = logData.map(l => {
+        const bg = l.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-red-50 border-red-100 text-red-800';
+        const icon = l.type === 'success' ? '✓' : '×';
+        return `
+          <div class="flex items-center gap-4 p-4 rounded-xl border ${bg} animate-fadeIn">
+            <span class="font-mono text-xs opacity-50 shrink-0">${l.time}</span>
+            <span class="h-6 w-6 rounded-full flex items-center justify-center bg-white/50 font-bold shrink-0">${icon}</span>
+            <div class="flex-1">
+               <p class="text-sm font-bold">${l.playerName}</p>
+               <p class="text-xs opacity-80">${l.msg}</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function issueStamp() {
+      const boothSelect = document.getElementById('boothSelect');
+      const booth = boothSelect.value;
+      const boothName = boothSelect.options[boothSelect.selectedIndex].getAttribute('data-name');
+      const id = document.getElementById('playerId').value.trim().toUpperCase();
+      if (!booth || !id) { showMsg('Select booth and scan ID', 'error'); return; }
+
+      const confirmed = await ConfirmModal.show({
+        title: 'Issue Stamp',
+        message: `Confirm issuing a stamp to player ${id} at ${boothName}?`,
+        confirmText: 'Issue Stamp'
+      });
+      if (!confirmed) return;
+      
+      try {
+        const res = await fetch('/api/admin/stamps/issue', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken },
+          body: JSON.stringify({ boothKey: booth, uniqueId: id })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+           showMsg(data.error || 'Issue failed', 'error');
+           addLog(data.error || 'Failed to issue', 'error', id);
+        } else {
+           let msg = `STAMP ISSUED: ${data.playerName}`;
+           if (data.autoRenewed) {
+             msg += ` (Auto-Renewed to Round ${data.newRound})`;
+           }
+           showMsg(msg, 'success');
+           addLog(`Stamped at ${data.boothName}`, 'success', data.playerName);
+           if (data.autoRenewed) {
+             addLog(`Round auto-advanced to ${data.newRound}`, 'success', data.playerName);
+           }
+           document.getElementById('playerId').value = '';
+        }
+      } catch(e) { }
+    }
+
+    async function revokeStamp() {
+      const boothSelect = document.getElementById('boothSelect');
+      const booth = boothSelect.value;
+      const boothName = boothSelect.options[boothSelect.selectedIndex].getAttribute('data-name');
+      const id = document.getElementById('playerId').value.trim().toUpperCase();
+      if (!booth || !id) return;
+
+      const confirmed = await ConfirmModal.show({
+        title: 'Revoke Stamp',
+        message: `Are you sure you want to revoke the stamp for player ${id} at ${boothName}? This action is logged.`,
+        confirmText: 'Revoke Stamp',
+        type: 'danger'
+      });
+      if (!confirmed) return;
+      
+      try {
+        const res = await fetch('/api/admin/stamps/revoke', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken },
+          body: JSON.stringify({ boothKey: booth, uniqueId: id })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+           showMsg(data.error || 'Revoke failed', 'error');
+           addLog(data.error || 'Failed to revoke', 'error', id);
+        } else {
+           showMsg(`REVOKED: ${data.playerName}`, 'success');
+           addLog(`Revoked from ${data.boothName}`, 'error', data.playerName);
+           document.getElementById('playerId').value = '';
+        }
+      } catch(e) { }
+    }
+
+    function showMsg(msg, type) {
+      const el = document.getElementById('stamp-msg');
+      el.classList.remove('hidden','bg-red-50','text-red-700','bg-emerald-50','text-emerald-700');
+      el.className = `mt-4 rounded-xl p-4 text-sm font-medium border text-center ${type === 'error' ? 'bg-red-50 text-red-700 border-red-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100'}`;
+      el.textContent = msg;
+      el.classList.remove('hidden');
+      setTimeout(() => el.classList.add('hidden'), 4000);
+    }
+
+    function initScanner() {
+      html5QrCode = new Html5Qrcode("qr-reader");
+      html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, (text) => {
+        const now = Date.now();
+        if (now - lastScanTime < 2000) return;
+        lastScanTime = now;
+        
+        let id = text.trim();
+        const match = id.match(/\/player\/([A-Z0-9]{6})/i);
+        if (match) id = match[1];
+        
+        document.getElementById('playerId').value = id.toUpperCase();
+        document.getElementById('scanner-overlay').style.borderColor = '#10b981';
+        setTimeout(() => { document.getElementById('scanner-overlay').style.borderColor = '#3b82f6'; }, 1000);
+      }).catch(err => { });
+    }
+
+    document.addEventListener('DOMContentLoaded', initScanner);
+  </script>
+</body>
+</html>

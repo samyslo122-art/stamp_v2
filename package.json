@@ -1,0 +1,27 @@
+{
+  "name": "school-event-passport",
+  "version": "1.0.0",
+  "description": "School Event Passport — Digital stamp collection system",
+  "main": "server.js",
+  "scripts": {
+    "start": "pm2 start ecosystem.config.js",
+    "stop": "pm2 stop ecosystem.config.js",
+    "dev": "node server.js",
+    "db:reset": "docker-compose down -v && docker-compose up -d",
+    "db:schema": "node -e \"require('./db').initSchema()\""
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.6",
+    "csrf-csrf": "^3.0.3",
+    "dotenv": "^16.3.1",
+    "ejs": "^3.1.9",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "express-session": "^1.17.3",
+    "helmet": "^7.1.0",
+    "pg": "^8.11.3",
+    "qrcode": "^1.5.3",
+    "socket.io": "^4.8.3",
+    "uuid": "^9.0.1"
+  }
+}

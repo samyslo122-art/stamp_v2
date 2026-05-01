@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Player Counter — Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script>
+    tailwind.config = { theme: { extend: { colors: { brand: { 50:'#eff6ff',100:'#dbeafe',200:'#bfdbfe',500:'#3b82f6',600:'#2563eb',700:'#1d4ed8' }}}}}
+  </script>
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    #qr-reader { border: none !important; }
+    #qr-reader video { object-fit: cover; border-radius: 1rem; }
+    .scan-overlay { position: absolute; inset: 0; border: 4px solid #3b82f6; border-radius: 1rem; animation: pulse-border 2s infinite; pointer-events: none; z-index: 10; }
+    @keyframes pulse-border { 0%, 100% { opacity: 0.3; transform: scale(0.98); } 50% { opacity: 0.7; transform: scale(1); } }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50">
+  <%- include('partials/admin-nav', { active: 'counter' }) %>
+  <main class="mx-auto max-w-4xl px-4 py-6">
+    <div class="flex items-center gap-3 mb-6">
+      <div class="h-10 w-10 rounded-xl bg-brand-600 flex items-center justify-center text-white shadow-lg">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+      </div>
+      <h1 class="text-2xl font-bold text-slate-800">Counter Services</h1>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <!-- Left Column: Scanner -->
+      <div class="lg:col-span-5 space-y-6">
+        <div class="relative rounded-2xl bg-black aspect-square overflow-hidden shadow-xl border-4 border-white">
+          <div id="qr-reader" class="w-full h-full"></div>
+          <div id="scanner-overlay" class="scan-overlay"></div>
+        </div>
+        <div class="rounded-2xl border border-slate-200/60 bg-white/80 backdrop-blur-sm p-6 shadow-sm">
+          <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4">Manual Entry / Search</h3>
+          <input id="mainQuery" type="text"
+            class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-lg font-mono text-center focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 focus:outline-none transition-all"
+            placeholder="TYPE CODE OR NAME" autocomplete="off" />
+          <div class="mt-4 grid grid-cols-2 gap-3">
+            <button onclick="registerPlayer()" class="rounded-xl bg-brand-600 py-3 text-sm font-bold text-white hover:bg-brand-700 active:scale-95 transition-all">New Player</button>
+            <button onclick="searchPlayers()" class="rounded-xl bg-slate-700 py-3 text-sm font-bold text-white hover:bg-slate-800 active:scale-95 transition-all">Search</button>
+          </div>
+          <div id="reg-msg" class="hidden mt-4 rounded-xl p-4 text-sm font-medium border text-center"></div>
+        </div>
+      </div>
+
+      <!-- Right Column: Results -->
+      <div class="lg:col-span-7 space-y-6">
+        <div class="rounded-2xl border border-slate-200/60 bg-white/80 backdrop-blur-sm p-6 shadow-sm min-h-full">
+          <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-6">Search Results</h3>
+          <div id="search-results" class="space-y-4">
+             <div class="flex flex-col items-center justify-center py-12 text-center text-slate-400">
+               <svg class="h-12 w-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+               <p class="text-sm">Scan a QR code or use the search box</p>
+             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/common.js"></script>
+  <script>
+    const csrfToken = '<%= csrfToken %>';
+    let html5QrCode = null;
+    let lastScanTime = 0;
+
+    const mainInput = document.getElementById('mainQuery');
+    mainInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') searchPlayers();
+    });
+
+    async function registerPlayer() {
+      const code = mainInput.value.trim().toUpperCase();
+      if (!code) return;
+      try {
+        const res = await fetch('/api/admin/players/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken },
+          body: JSON.stringify({ groupCode: code })
+        });
+        const data = await res.json();
+        const msgEl = document.getElementById('reg-msg');
+        msgEl.classList.remove('hidden');
+        if (!res.ok) {
+          msgEl.className = 'mt-4 rounded-xl p-4 text-sm font-medium border text-center bg-red-50 text-red-700 border-red-100';
+          msgEl.textContent = data.error || 'Failed to create player';
+        } else {
+          msgEl.className = 'mt-4 rounded-xl p-4 text-sm font-medium border text-center bg-emerald-50 text-emerald-700 border-emerald-100';
+          msgEl.textContent = `Successfully Created ${data.name}`;
+          searchPlayers(data.uniqueId);
+        }
+      } catch(e) { }
+    }
+
+    async function searchPlayers(forceQuery) {
+      const q = forceQuery || mainInput.value.trim();
+      if (!q) return;
+      try {
+        const res = await fetch(`/api/admin/players/search?q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+        const container = document.getElementById('search-results');
+        if (!res.ok || !data.players || data.players.length === 0) {
+          container.innerHTML = '<div class="p-8 text-center text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-200">No players matching that criteria found.</div>';
+          return;
+        }
+        container.innerHTML = data.players.map(p => `
+          <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:border-brand-300 transition-all group">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-3">
+                <div class="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-700 font-bold text-lg">${p.name.charAt(p.name.length-1)}</div>
+                <div>
+                  <h4 class="font-bold text-slate-800">${p.name}</h4>
+                  <p class="text-xs text-slate-500 font-mono tracking-tight">${p.group_code}</p>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="text-xs font-bold text-slate-400 uppercase">Unique ID</span>
+                <p class="font-mono font-bold text-brand-600">${p.unique_id}</p>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-slate-50 rounded-xl p-4 flex flex-col items-center justify-center">
+                 <img src="${p.qr_data_url}" class="w-24 h-24 rounded-lg shadow-sm bg-white p-1" />
+                 <span class="text-[10px] font-bold text-slate-400 uppercase mt-2">Recovery QR</span>
+              </div>
+              <div class="flex flex-col justify-center gap-2">
+                <a href="/player/${p.unique_id}" target="_blank" class="w-full py-2.5 rounded-lg bg-brand-50 text-brand-700 text-center text-xs font-bold hover:bg-brand-100 transition-colors">Open Portal</a>
+                <div class="py-2.5 rounded-lg bg-slate-50 text-slate-600 text-center text-xs font-bold">Round ${p.current_round}</div>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      } catch(e) { }
+    }
+
+    function initScanner() {
+      html5QrCode = new Html5Qrcode("qr-reader");
+      html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, (text) => {
+        const now = Date.now();
+        if (now - lastScanTime < 2000) return;
+        lastScanTime = now;
+        
+        let id = text.trim();
+        const match = id.match(/\/player\/([A-Z0-9]{6})/i);
+        if (match) id = match[1];
+        
+        mainInput.value = id.toUpperCase();
+        document.getElementById('scanner-overlay').style.borderColor = '#10b981';
+        setTimeout(() => { document.getElementById('scanner-overlay').style.borderColor = '#3b82f6'; }, 1000);
+        searchPlayers();
+      }).catch(err => { });
+    }
+
+    document.addEventListener('DOMContentLoaded', initScanner);
+  </script>
+</body>
+</html>

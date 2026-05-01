@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Group Check-in — Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script>
+    tailwind.config = { theme: { extend: { colors: { brand: { 50:'#eff6ff',100:'#dbeafe',200:'#bfdbfe',500:'#3b82f6',600:'#2563eb',700:'#1d4ed8' }}}}}
+  </script>
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    #qr-reader { border: none !important; }
+    #qr-reader video { object-fit: cover; border-radius: 1rem; }
+    .scan-overlay { position: absolute; inset: 0; border: 4px solid #3b82f6; border-radius: 1rem; animation: pulse-border 2s infinite; pointer-events: none; z-index: 10; }
+    @keyframes pulse-border { 0%, 100% { opacity: 0.3; transform: scale(0.98); } 50% { opacity: 0.7; transform: scale(1); } }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50">
+  <%- include('partials/admin-nav', { active: 'group-checkin' }) %>
+  <%- include('partials/modal') %>
+  <main class="mx-auto max-w-2xl px-4 py-6">
+    <div class="flex items-center gap-3 mb-6">
+      <div class="h-10 w-10 rounded-xl bg-brand-600 flex items-center justify-center text-white shadow-lg">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      </div>
+      <h1 class="text-2xl font-bold text-slate-800">Group Check-in</h1>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="space-y-4">
+        <!-- Always-On Scanner -->
+        <div class="relative rounded-2xl bg-black aspect-square overflow-hidden shadow-lg border-4 border-white">
+          <div id="qr-reader" class="w-full h-full"></div>
+          <div id="scanner-overlay" class="scan-overlay"></div>
+        </div>
+
+        <div class="rounded-2xl border border-slate-200/60 bg-white/80 backdrop-blur-sm p-5 shadow-sm">
+          <label for="groupCode" class="block text-sm font-semibold text-slate-700 mb-1.5">Manual Entry</label>
+          <input id="groupCode" type="text" maxlength="20"
+            class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-lg font-mono uppercase text-center focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 focus:outline-none transition-all"
+            placeholder="SCAN OR TYPE CODE" autocomplete="off" />
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <div id="group-info" class="hidden h-full rounded-2xl border border-slate-200/60 bg-white/80 backdrop-blur-sm p-6 shadow-sm flex flex-col">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-lg font-bold text-slate-800">Group Status</h2>
+            <span id="checkin-badge" class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider"></span>
+          </div>
+          
+          <div class="grid grid-cols-1 gap-4 mb-auto">
+            <div class="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100">
+              <span class="text-sm font-medium text-slate-500">Group Code</span>
+              <span id="info-code" class="text-base font-bold font-mono text-slate-800"></span>
+            </div>
+            <div class="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100">
+              <span class="text-sm font-medium text-slate-500">Registration</span>
+              <span id="info-stats" class="text-base font-bold text-slate-800"></span>
+            </div>
+          </div>
+
+          <div id="checkin-action" class="mt-6"></div>
+          <div id="checkin-msg" class="hidden mt-4 rounded-xl p-4 text-sm font-medium border"></div>
+        </div>
+
+        <div id="no-group-selected" class="h-full min-h-[300px] flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-8 text-center">
+          <div class="h-16 w-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-4">
+            <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+          </div>
+          <p class="text-slate-500 font-medium">No Group Selected</p>
+          <p class="text-xs text-slate-400 mt-1">Scan a QR code or type above to look up group details</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/common.js"></script>
+  <script>
+    const csrfToken = '<%= csrfToken %>';
+    let html5QrCode = null;
+    let lastScanTime = 0;
+
+    const groupInput = document.getElementById('groupCode');
+    groupInput.addEventListener('input', () => {
+      const val = groupInput.value.trim().toUpperCase();
+      if (val.length >= 3) lookupGroup(val);
+    });
+
+    async function lookupGroup(code) {
+      try {
+        const res = await fetch(`/api/admin/groups/lookup/${encodeURIComponent(code)}`);
+        const data = await res.json();
+        if (!res.ok) { 
+           document.getElementById('group-info').classList.add('hidden');
+           document.getElementById('no-group-selected').classList.remove('hidden');
+           return; 
+        }
+        showGroupInfo(data);
+      } catch(e) { }
+    }
+
+    function showGroupInfo(g) {
+      document.getElementById('no-group-selected').classList.add('hidden');
+      document.getElementById('group-info').classList.remove('hidden');
+      document.getElementById('info-code').textContent = g.group_code;
+      document.getElementById('info-stats').textContent = `${g.registered} / ${g.quota} Registered`;
+      
+      const badge = document.getElementById('checkin-badge');
+      const actionDiv = document.getElementById('checkin-action');
+      
+      if (g.checked_in) {
+        badge.className = 'inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200';
+        badge.textContent = 'CHECKED IN';
+        actionDiv.innerHTML = '<div class="p-4 rounded-xl bg-emerald-50 text-emerald-700 text-sm font-medium border border-emerald-100 text-center">✓ Registration is active for this group</div>';
+      } else {
+        badge.className = 'inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold bg-amber-100 text-amber-700 border border-amber-200';
+        badge.textContent = 'PENDING';
+        actionDiv.innerHTML = `<button onclick="confirmCheckin('${g.group_code}')" class="w-full rounded-xl bg-brand-600 px-4 py-4 text-base font-bold text-white shadow-lg hover:bg-brand-700 active:scale-95 transition-all">Confirm Group Check-in</button>`;
+      }
+      hideMsg();
+    }
+
+    async function confirmCheckin(code) {
+      const confirmed = await ConfirmModal.show({
+        title: 'Confirm Check-in',
+        message: `Are you sure you want to check in Group ${code}? This will allow players in this group to register.`,
+        confirmText: 'Check-in Group'
+      });
+      
+      if (!confirmed) return;
+
+      try {
+        const res = await fetch('/api/admin/groups/checkin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken },
+          body: JSON.stringify({ groupCode: code })
+        });
+        if (!res.ok) { showMsg('Failed to check in group', 'error'); return; }
+        showMsg('Group checked in successfully!', 'success');
+        lookupGroup(code);
+      } catch(e) { showMsg('Connection error', 'error'); }
+    }
+
+    function showMsg(msg, type) {
+      const el = document.getElementById('checkin-msg');
+      el.classList.remove('hidden','bg-red-50','text-red-700','border-red-200','bg-emerald-50','text-emerald-700','border-emerald-200');
+      el.classList.add(type === 'error' ? 'bg-red-50' : 'bg-emerald-50', type === 'error' ? 'text-red-700' : 'text-emerald-700', 'border', type === 'error' ? 'border-red-200' : 'border-emerald-200');
+      el.textContent = msg;
+      el.classList.remove('hidden');
+    }
+    function hideMsg() { document.getElementById('checkin-msg').classList.add('hidden'); }
+
+    function initScanner() {
+      html5QrCode = new Html5Qrcode("qr-reader");
+      html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, (text) => {
+        const now = Date.now();
+        if (now - lastScanTime < 2000) return;
+        lastScanTime = now;
+        const code = text.trim().toUpperCase();
+        groupInput.value = code;
+        document.getElementById('scanner-overlay').style.borderColor = '#10b981';
+        setTimeout(() => { document.getElementById('scanner-overlay').style.borderColor = '#3b82f6'; }, 1000);
+        lookupGroup(code);
+      }).catch(err => {
+        console.error("Scanner init failed", err);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', initScanner);
+  </script>
+</body>
+</html>

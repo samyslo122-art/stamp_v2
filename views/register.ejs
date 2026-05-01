@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register — <%= eventDetails.Event %></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 300: '#93c5fd',
+              400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8',
+              800: '#1e40af', 900: '#1e3a8a'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    #qr-reader { border: none !important; }
+    #qr-reader__scan_region { background: white; }
+    #qr-reader video { object-fit: cover; border-radius: 1rem; }
+    .scan-overlay {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      border: 4px solid #3b82f6; border-radius: 1rem;
+      animation: pulse-border 2s infinite; pointer-events: none; z-index: 10;
+    }
+    @keyframes pulse-border {
+      0% { opacity: 0.3; transform: scale(0.98); }
+      50% { opacity: 0.7; transform: scale(1); }
+      100% { opacity: 0.3; transform: scale(0.98); }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-slate-100 flex items-center justify-center p-4">
+  <main class="w-full max-w-md">
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-lg mb-4">
+        <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+        </svg>
+      </div>
+      <h1 class="text-2xl font-bold text-slate-800">Event Passport</h1>
+      <p class="text-sm text-slate-500 mt-1"><%= eventDetails.Event %></p>
+    </div>
+
+    <div class="rounded-2xl border border-slate-200/60 bg-white/80 backdrop-blur-sm p-6 shadow-sm overflow-hidden">
+      <h2 class="text-lg font-semibold text-slate-800 mb-1">Welcome</h2>
+      <p class="text-sm text-slate-500 mb-5 text-center">Scan your group QR code to register</p>
+
+      <div class="space-y-4">
+        <!-- Always-On Scanner Container -->
+        <div id="scanner-wrapper" class="relative rounded-2xl bg-black aspect-square overflow-hidden shadow-inner border-4 border-white">
+          <div id="qr-reader" class="w-full h-full"></div>
+          <div id="scanner-overlay" class="scan-overlay"></div>
+          <div id="camera-error" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-slate-100 p-6 text-center">
+            <svg class="h-12 w-12 text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            <p class="text-sm font-medium text-slate-600">Camera not active</p>
+            <p class="text-xs text-slate-400 mt-1">Please enter your code manually below</p>
+          </div>
+        </div>
+
+        <div class="pt-2">
+          <label for="groupCode" class="block text-sm font-medium text-slate-700 mb-1.5">Group Code</label>
+          <input id="groupCode" type="text" maxlength="20"
+            class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-lg font-mono uppercase text-center placeholder-slate-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 focus:outline-none transition-all shadow-sm"
+            placeholder="TYPE CODE HERE" autocomplete="off" />
+        </div>
+
+        <div id="status-msg" class="hidden rounded-xl p-4 text-sm font-medium border animate-pulse"></div>
+
+        <div id="confirmation-step" class="hidden animate-fadeIn space-y-4 pt-2">
+          <div class="rounded-xl bg-brand-50 border border-brand-100 p-4">
+            <p class="text-xs font-bold text-brand-600 uppercase tracking-widest mb-1">Confirm Registration</p>
+            <p class="text-lg font-bold text-slate-800" id="confirm-group-display"></p>
+            <p class="text-xs text-slate-500" id="confirm-spots-display"></p>
+          </div>
+        </div>
+
+        <button id="continueBtn" type="button" disabled
+          class="w-full rounded-xl bg-brand-600 px-4 py-4 text-base font-bold text-white shadow-lg hover:bg-brand-700 active:scale-95 disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed transition-all"
+          onclick="doRegister()">
+          Complete Registration
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/common.js"></script>
+  <script>
+    const csrfToken = '<%= csrfToken %>';
+    let html5QrCode = null;
+    let isProcessing = false;
+    let lastScanTime = 0;
+
+    const groupInput = document.getElementById('groupCode');
+    const continueBtn = document.getElementById('continueBtn');
+    const statusMsg = document.getElementById('status-msg');
+
+    // Auto-validate on input
+    let debounceTimer = null;
+    groupInput.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      const val = groupInput.value.trim().toUpperCase();
+      if (val.length < 3) {
+        hideStatus();
+        continueBtn.disabled = true;
+        return;
+      }
+      debounceTimer = setTimeout(() => validateGroup(val), 300);
+    });
+
+    async function validateGroup(code) {
+      if (isProcessing) return;
+      try {
+        const res = await fetch(`/api/groups/validate/${encodeURIComponent(code)}`);
+        const data = await res.json();
+        
+        if (!res.ok || !data.found) {
+          showStatus('Group not found. Please check the code.', 'error');
+          continueBtn.disabled = true;
+          return;
+        }
+
+        if (!data.checked_in) {
+          showStatus('Group recognized! Registration is waiting for staff check-in.', 'warning');
+          continueBtn.disabled = true;
+        } else if (data.remaining <= 0) {
+          showStatus('This group has reached its maximum quota.', 'error');
+          continueBtn.disabled = true;
+        } else {
+          showStatus(`Group recognized! Complete registration below.`, 'success');
+          document.getElementById('confirm-group-display').textContent = `Group ${code}`;
+          document.getElementById('confirm-spots-display').textContent = `${data.remaining} spot${data.remaining !== 1 ? 's' : ''} available`;
+          document.getElementById('confirmation-step').classList.remove('hidden');
+          continueBtn.disabled = false;
+        }
+      } catch (err) {
+        showStatus('Network error. Check connection.', 'error');
+      }
+    }
+
+    async function doRegister() {
+      if (isProcessing) return;
+      isProcessing = true;
+      continueBtn.disabled = true;
+      const originalText = continueBtn.textContent;
+      continueBtn.textContent = 'Processing...';
+
+      try {
+        const res = await fetch('/api/players/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken },
+          body: JSON.stringify({ groupCode: groupInput.value.trim().toUpperCase() }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          showStatus(data.error || 'Registration failed', 'error');
+          isProcessing = false;
+          continueBtn.disabled = false;
+          continueBtn.textContent = originalText;
+          return;
+        }
+        window.location.href = `/player/${data.uniqueId}`;
+      } catch (err) {
+        showStatus('Connection error. Please try again.', 'error');
+        isProcessing = false;
+        continueBtn.disabled = false;
+        continueBtn.textContent = originalText;
+      }
+    }
+
+    function showStatus(msg, type) {
+      statusMsg.classList.remove('hidden', 'bg-red-50', 'text-red-700', 'border-red-200', 'bg-amber-50', 'text-amber-700', 'border-amber-200', 'bg-emerald-50', 'text-emerald-700', 'border-emerald-200');
+      if (type === 'error') statusMsg.classList.add('bg-red-50', 'text-red-700', 'border-red-200');
+      else if (type === 'warning') statusMsg.classList.add('bg-amber-50', 'text-amber-700', 'border-amber-200');
+      else statusMsg.classList.add('bg-emerald-50', 'text-emerald-700', 'border-emerald-200');
+      statusMsg.textContent = msg;
+      statusMsg.classList.remove('hidden');
+    }
+
+    function hideStatus() { 
+      statusMsg.classList.add('hidden'); 
+      document.getElementById('confirmation-step').classList.add('hidden');
+    }
+
+    // Always-On Scanner Logic
+    function initScanner() {
+      html5QrCode = new Html5Qrcode("qr-reader");
+      const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+      html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
+        const now = Date.now();
+        if (now - lastScanTime < 2000) return; // Prevent double scan
+        
+        lastScanTime = now;
+        groupInput.value = decodedText.trim().toUpperCase();
+        
+        // Success feedback
+        document.getElementById('scanner-overlay').style.borderColor = '#10b981';
+        setTimeout(() => { document.getElementById('scanner-overlay').style.borderColor = '#3b82f6'; }, 1000);
+        
+        validateGroup(groupInput.value);
+      }).catch(err => {
+        console.error("Scanner error", err);
+        document.getElementById('camera-error').classList.remove('hidden');
+        document.getElementById('scanner-overlay').classList.add('hidden');
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', initScanner);
+  </script>
+</body>
+</html>

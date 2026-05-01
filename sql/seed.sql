@@ -1,0 +1,3 @@
+-- Seed data is loaded via the Developer Dashboard "Initialise from Config" button
+-- This file is kept for reference / manual seeding if needed
+-- See /api/developer/init-all route for the actual seeding logic

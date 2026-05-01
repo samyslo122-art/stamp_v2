@@ -1,0 +1,30 @@
+<nav class="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 sticky top-0 z-40">
+  <div class="mx-auto max-w-4xl px-4">
+    <div class="flex items-center justify-between h-14">
+      <div class="flex items-center gap-1 overflow-x-auto">
+        <a href="/admin/group-checkin"
+          class="shrink-0 rounded-lg px-3 py-2 text-sm font-medium transition <%= active === 'group-checkin' ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100' %>">
+          Check-in
+        </a>
+        <a href="/admin/counter"
+          class="shrink-0 rounded-lg px-3 py-2 text-sm font-medium transition <%= active === 'counter' ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100' %>">
+          Counter
+        </a>
+        <a href="/admin/booth"
+          class="shrink-0 rounded-lg px-3 py-2 text-sm font-medium transition <%= active === 'booth' ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100' %>">
+          Booth
+        </a>
+        <a href="/admin/redeem"
+          class="shrink-0 rounded-lg px-3 py-2 text-sm font-medium transition <%= active === 'redeem' ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100' %>">
+          Redeem
+        </a>
+      </div>
+      <form method="POST" action="/admin/logout" class="shrink-0">
+        <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>" />
+        <button type="submit" class="rounded-lg px-3 py-2 text-sm font-medium text-slate-500 hover:bg-slate-100 transition">
+          Logout
+        </button>
+      </form>
+    </div>
+  </div>
+</nav>

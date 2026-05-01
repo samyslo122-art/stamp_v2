@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Developer Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tom Select for searchable dropdowns -->
+  <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+  <script>
+    tailwind.config = { theme: { extend: { colors: { brand: { 50:'#eff6ff',100:'#dbeafe',200:'#bfdbfe',500:'#3b82f6',600:'#2563eb',700:'#1d4ed8' }}}}}
+  </script>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body class="min-h-screen bg-slate-50">
+  <nav class="bg-white border-b border-slate-200 sticky top-0 z-40">
+    <div class="mx-auto max-w-[1500px] px-4">
+      <div class="flex items-center justify-between h-14">
+        <div class="flex items-center gap-4">
+            <span class="text-sm font-bold text-slate-800">Developer Console</span>
+            <div id="live-indicator" class="flex items-center gap-1.5 px-2 py-1 rounded-md bg-emerald-50 text-[10px] font-bold text-emerald-600 uppercase tracking-tight border border-emerald-100">
+                <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Live
+            </div>
+        </div>
+        <form method="POST" action="/developer/logout">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+          <button type="submit" class="rounded-lg px-3 py-2 text-sm font-medium text-slate-500 hover:bg-slate-100 transition">Logout</button>
+        </form>
+      </div>
+    </div>
+  </nav>
+
+  <main class="mx-auto max-w-[1500px] px-4 py-6">
+    <!-- Stats Row -->
+    <div id="stats-banner" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Total Players</p>
+            <h3 id="stat-players" class="text-3xl font-black text-slate-800">...</h3>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Total Stamps</p>
+            <h3 id="stat-stamps" class="text-3xl font-black text-slate-800">...</h3>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Redemptions</p>
+            <h3 id="stat-redemptions" class="text-3xl font-black text-slate-800">...</h3>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Groups Checked-in</p>
+            <h3 id="stat-groups" class="text-3xl font-black text-slate-800">...</h3>
+        </div>
+    </div>
+
+    <!-- Tab Bar -->
+    <div class="flex flex-wrap gap-1 mb-6 rounded-xl bg-slate-200/50 p-1">
+      <button onclick="switchDevTab('players')" data-dev-tab="players" class="dev-tab rounded-lg px-4 py-2.5 text-sm font-bold transition bg-white shadow-sm text-slate-900">Players</button>
+      <button onclick="switchDevTab('stamps')" data-dev-tab="stamps" class="dev-tab rounded-lg px-4 py-2.5 text-sm font-bold transition text-slate-500">Stamps</button>
+      <button onclick="switchDevTab('redemptions')" data-dev-tab="redemptions" class="dev-tab rounded-lg px-4 py-2.5 text-sm font-bold transition text-slate-500">Redemptions</button>
+      <button onclick="switchDevTab('groups')" data-dev-tab="groups" class="dev-tab rounded-lg px-4 py-2.5 text-sm font-bold transition text-slate-500">Groups</button>
+      <button onclick="switchDevTab('gifts')" data-dev-tab="gifts" class="dev-tab rounded-lg px-4 py-2.5 text-sm font-bold transition text-slate-500">Gifts</button>
+      
+      <div class="w-px h-8 bg-slate-300 mx-2 self-center"></div>
+      
+      <button onclick="switchDevTab('categories')" data-dev-tab="categories" class="dev-tab rounded-lg px-4 py-2.5 text-sm font-bold transition text-slate-500">Categories</button>
+      <button onclick="switchDevTab('booths')" data-dev-tab="booths" class="dev-tab rounded-lg px-4 py-2.5 text-sm font-bold transition text-slate-500">Booths</button>
+      <button onclick="switchDevTab('tiers')" data-dev-tab="tiers" class="dev-tab rounded-lg px-4 py-2.5 text-sm font-bold transition text-slate-500">Tiers</button>
+      <button onclick="switchDevTab('settings')" data-dev-tab="settings" class="dev-tab rounded-lg px-4 py-2.5 text-sm font-bold transition text-slate-500">Settings</button>
+      
+      <div class="w-px h-8 bg-slate-300 mx-2 self-center"></div>
+
+      <button onclick="switchDevTab('links')" data-dev-tab="links" class="dev-tab rounded-lg px-4 py-2.5 text-sm font-bold transition text-slate-500">Links Hub</button>
+      <button onclick="switchDevTab('init')" data-dev-tab="init" class="dev-tab rounded-lg px-4 py-2.5 text-sm font-bold transition text-slate-500">Wipe & Reset</button>
+      <button onclick="switchDevTab('export')" data-dev-tab="export" class="dev-tab rounded-lg px-4 py-2.5 text-sm font-bold transition text-slate-500">Export</button>
+    </div>
+
+    <!-- Content Panels -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden min-h-[500px]">
+        <!-- Core Data -->
+        <div id="panel-players" class="dev-panel p-6"><div class="flex justify-between items-center mb-6"><h2 class="text-xl font-bold">Players</h2><button onclick="openModal('player')" class="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-bold">+ New Player</button></div><div class="overflow-x-auto"><table id="table-players" class="w-full text-sm text-left"></table></div></div>
+        <div id="panel-stamps" class="dev-panel hidden p-6"><div class="flex justify-between items-center mb-6"><h2 class="text-xl font-bold">Stamps</h2><button onclick="openModal('stamp')" class="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-bold">+ Manual Stamp</button></div><div class="overflow-x-auto"><table id="table-stamps" class="w-full text-sm text-left"></table></div></div>
+        <div id="panel-redemptions" class="dev-panel hidden p-6"><div class="flex justify-between items-center mb-6"><h2 class="text-xl font-bold">Redemptions</h2><button onclick="openModal('redemption')" class="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-bold">+ Manual Claim</button></div><div class="overflow-x-auto"><table id="table-redemptions" class="w-full text-sm text-left"></table></div></div>
+        <div id="panel-groups" class="dev-panel hidden p-6"><div class="flex justify-between items-center mb-6"><h2 class="text-xl font-bold">Groups</h2><button onclick="openModal('group')" class="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-bold">+ Add Group</button></div><div class="overflow-x-auto"><table id="table-groups" class="w-full text-sm text-left"></table></div></div>
+        <div id="panel-gifts" class="dev-panel hidden p-6"><div class="flex justify-between items-center mb-6"><h2 class="text-xl font-bold">Gift Inventory</h2><button onclick="openModal('gift')" class="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-bold">+ New Gift</button></div><div class="overflow-x-auto"><table id="table-gifts" class="w-full text-sm text-left"></table></div></div>
+
+        <!-- Configuration Data -->
+        <div id="panel-categories" class="dev-panel hidden p-6"><div class="flex justify-between items-center mb-6"><h2 class="text-xl font-bold">Booth Categories</h2><button onclick="openModal('category')" class="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-bold">+ New Category</button></div><div class="overflow-x-auto"><table id="table-categories" class="w-full text-sm text-left"></table></div></div>
+        <div id="panel-booths" class="dev-panel hidden p-6"><div class="flex justify-between items-center mb-6"><h2 class="text-xl font-bold">Booth Stations</h2><button onclick="openModal('booth')" class="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-bold">+ New Booth</button></div><div class="overflow-x-auto"><table id="table-booths" class="w-full text-sm text-left"></table></div></div>
+        <div id="panel-tiers" class="dev-panel hidden p-6"><div class="flex justify-between items-center mb-6"><h2 class="text-xl font-bold">Redemption Tiers</h2><button onclick="openModal('tier')" class="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-bold">+ New Tier</button></div><div class="overflow-x-auto"><table id="table-tiers" class="w-full text-sm text-left"></table></div></div>
+        <div id="panel-settings" class="dev-panel hidden p-6"><h2 class="text-xl font-bold mb-6">System Settings</h2><div class="overflow-x-auto"><table id="table-settings" class="w-full text-sm text-left"></table></div></div>
+
+        <div id="panel-links" class="dev-panel hidden p-6"><h2 class="text-xl font-bold mb-6">Links Hub</h2><div id="links-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div></div>
+        <div id="panel-init" class="dev-panel hidden p-6 text-center py-20"><h2 class="text-2xl font-bold mb-4">Reset System</h2><p class="text-slate-500 mb-8 max-w-md mx-auto">This will re-synchronize all booths, tiers, and categories from config.js and seed inventory.</p><button onclick="initAll()" class="bg-brand-600 text-white px-8 py-4 rounded-2xl font-bold shadow-xl">RE-INITIALISE FROM CONFIG.JS</button></div>
+        <div id="panel-export" class="dev-panel hidden p-6 text-center py-20"><h2 class="text-2xl font-bold mb-8">Data Export</h2><div class="max-w-md mx-auto space-y-4"><div><label class="label text-left">Table</label><select id="export-table-select" class="input"><option value="players">Players</option><option value="stamps">Stamps</option><option value="redemptions">Redemptions</option><option value="groups">Groups</option><option value="gift_inventory">Gifts</option><option value="booths">Booths Config</option><option value="categories">Categories Config</option></select></div><div class="flex justify-center gap-4 pt-4"><button onclick="downloadExport('csv')" class="bg-white border-2 border-slate-200 px-6 py-3 rounded-xl font-bold">CSV</button><button onclick="downloadExport('json')" class="bg-white border-2 border-slate-200 px-6 py-3 rounded-xl font-bold">JSON</button></div></div></div>
+    </div>
+  </main>
+
+  <!-- Modals -->
+  <div id="modal-overlay" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
+          <div class="p-6 border-b border-slate-100 flex justify-between items-center"><h3 id="modal-title" class="text-lg font-bold">Edit Record</h3><button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 text-2xl">&times;</button></div>
+          <div id="modal-content" class="p-6 max-h-[70vh] overflow-y-auto"></div>
+          <div class="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3"><button onclick="closeModal()" class="px-4 py-2 text-sm font-bold text-slate-500">Cancel</button><button onclick="handleModalSubmit()" class="bg-brand-600 text-white px-6 py-2 rounded-lg text-sm font-bold">Save Changes</button></div>
+      </div>
+  </div>
+
+  <script src="/js/common.js"></script>
+  <script>
+    const csrfToken = '<%= csrfToken %>';
+    let currentTab = 'players';
+    let currentModalType = '';
+    let currentEditId = null;
+    let lookupData = { players: [], groups: [], booths: [], tiers: [], categories: [] };
+    let tomSelects = [];
+
+    async function switchDevTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.dev-tab').forEach(t => { t.classList.remove('bg-white', 'shadow-sm', 'text-slate-900'); t.classList.add('text-slate-500'); });
+      document.querySelector(`[data-dev-tab="${tab}"]`).classList.replace('text-slate-500', 'text-slate-900');
+      document.querySelector(`[data-dev-tab="${tab}"]`).classList.add('bg-white', 'shadow-sm');
+      document.querySelectorAll('.dev-panel').forEach(p => p.classList.add('hidden'));
+      document.getElementById(`panel-${tab}`).classList.remove('hidden');
+      if (tab === 'links') fetchLinks(); else fetchData();
+    }
+
+    async function fetchData() {
+        if (['init', 'export', 'links'].includes(currentTab)) return;
+        try {
+            const res = await fetch(`/api/developer/${currentTab}`);
+            const data = await res.json();
+            renderTable(currentTab, data);
+            fetchStats();
+            fetchLookupData();
+        } catch (e) {}
+    }
+
+    async function fetchLookupData() {
+        const res = await fetch('/api/developer/lookup-data');
+        lookupData = await res.json();
+    }
+
+    async function fetchStats() {
+        const res = await fetch('/api/developer/stats');
+        const data = await res.json();
+        const stats = data[0];
+        document.getElementById('stat-players').textContent = stats.total_players;
+        document.getElementById('stat-stamps').textContent = stats.total_stamps;
+        document.getElementById('stat-redemptions').textContent = stats.total_redemptions;
+        document.getElementById('stat-groups').textContent = stats.checked_in_groups + '/' + stats.total_groups;
+    }
+
+    function renderTable(tab, data) {
+        const table = document.getElementById(`table-${tab}`);
+        const rows = data.rows || data;
+        let html = '<thead><tr class="text-[10px] uppercase text-slate-400 border-b">';
+        let cols = [];
+
+        if (tab === 'players') { cols = ['#', 'Name', 'UID', 'Round', 'Group', 'Actions']; }
+        else if (tab === 'stamps') { cols = ['Player', 'Booth', 'Val', 'R', 'Actions']; }
+        else if (tab === 'redemptions') { cols = ['Player', 'Tier', 'Gift', 'R', 'Actions']; }
+        else if (tab === 'groups') { cols = ['Code', 'Quota', 'Reg.', 'In?', 'Actions']; }
+        else if (tab === 'gifts') { cols = ['Tier', 'Gift Name', 'Stock', 'Total', 'Actions']; }
+        else if (tab === 'categories') { cols = ['Key', 'Name', 'Actions']; }
+        else if (tab === 'booths') { cols = ['Key', 'Name', 'Cat', 'Val', 'Actions']; }
+        else if (tab === 'tiers') { cols = ['Key', 'Name', 'Stamps', 'Cats', 'All?', 'Actions']; }
+        else if (tab === 'settings') { cols = ['Key', 'Value (JSON)', 'Actions']; }
+
+        html += cols.map(c => `<th class="pb-3">${c}</th>`).join('') + '</tr></thead><tbody>';
+
+        html += rows.map(r => {
+            let row = '<tr class="border-b hover:bg-slate-50">';
+            if (tab === 'players') row += `<td class="py-4">${r.player_number}</td><td class="font-bold">${r.name}</td><td class="font-mono text-brand-600">${r.unique_id}</td><td>${r.current_round}</td><td>${r.group_code}</td>`;
+            else if (tab === 'stamps') row += `<td class="font-bold">${r.player_name}</td><td>${r.booth_name}</td><td>${r.stamp_value}</td><td>${r.round_number}</td>`;
+            else if (tab === 'redemptions') row += `<td class="font-bold">${r.player_name}</td><td>${r.tier_claimed}</td><td>${r.gift_name}</td><td>${r.round_number}</td>`;
+            else if (tab === 'groups') row += `<td class="font-black">${r.group_code}</td><td>${r.quota}</td><td>${r.registered_count}</td><td>${r.checked_in ? 'YES' : 'NO'}</td>`;
+            else if (tab === 'gifts') row += `<td>${r.tier}</td><td class="font-bold">${r.gift_name}</td><td>${r.remaining_qty}</td><td>${r.total_qty}</td>`;
+            else if (tab === 'categories') row += `<td class="font-mono">${r.category_key}</td><td>${r.name}</td>`;
+            else if (tab === 'booths') row += `<td>${r.booth_key}</td><td class="font-bold">${r.name}</td><td>${r.category}</td><td>${r.stamp_value}</td>`;
+            else if (tab === 'tiers') row += `<td>${r.tier_key}</td><td class="font-bold">${r.name}</td><td>${r.required_stamps}</td><td>${r.min_categories}</td><td>${r.require_all_categories ? 'YES' : 'NO'}</td>`;
+            else if (tab === 'settings') row += `<td class="font-bold">${r.setting_key}</td><td class="font-mono text-[10px] max-w-xs truncate">${JSON.stringify(r.setting_value)}</td>`;
+            
+            row += `<td class="py-4">
+                <button onclick='openModal("${tab.slice(0,-1)}", ${JSON.stringify(r)})' class="text-brand-600 font-bold mr-2">Edit</button>
+                ${tab !== 'settings' ? `<button onclick="deleteRecord('${tab}', ${r.id})" class="text-red-500 font-bold">Delete</button>` : ''}
+            </td></tr>`;
+            return row;
+        }).join('');
+        
+        table.innerHTML = html + '</tbody>';
+    }
+
+    function openModal(type, data = null) {
+        currentModalType = type;
+        currentEditId = data ? data.id : null;
+        document.getElementById('modal-title').textContent = data ? `Edit ${type}` : `Create ${type}`;
+        tomSelects.forEach(ts => ts.destroy()); tomSelects = [];
+        let html = '<div class="space-y-4">';
+
+        if (type === 'player') {
+            html += `<div><label class="label">Name</label><input id="m_name" class="input" value="${data?data.name:''}"></div>
+                     <div><label class="label">Group</label><select id="m_gid" class="tom-select">${lookupData.groups.map(g=>`<option value="${g.id}" ${data&&data.group_id===g.id?'selected':''}>${g.group_code}</option>`).join('')}</select></div>
+                     <div class="grid grid-cols-2 gap-4">
+                        <div><label class="label">Round</label><input id="m_round" class="input" type="number" value="${data?data.current_round:1}"></div>
+                        <div><label class="label">Seq #</label><input id="m_pnum" class="input" type="number" value="${data?data.player_number:''}" placeholder="Auto"></div>
+                     </div>
+                     <div><label class="label">UID</label><input id="m_uid" class="input" placeholder="AUTO" value="${data?data.unique_id:''}"></div>`;
+        } else if (type === 'stamp') {
+            html += `<div><label class="label">Player</label><select id="m_pid" class="tom-select">${lookupData.players.map(p=>`<option value="${p.id}" ${data&&data.player_id===p.id?'selected':''}>${p.name}</option>`).join('')}</select></div>
+                     <div><label class="label">Booth</label><select id="m_bk" class="tom-select">${lookupData.booths.map(b=>`<option value="${b.booth_key}" ${data&&data.booth_name===b.booth_key?'selected':''}>${b.name}</option>`).join('')}</select></div>
+                     <div><label class="label">Round</label><input id="m_round" class="input" type="number" value="${data?data.round_number:1}"></div>`;
+        } else if (type === 'group') {
+            html += `<div><label class="label">Code</label><input id="m_code" class="input" value="${data?data.group_code:''}"></div>
+                     <div><label class="label">Quota</label><input id="m_quota" class="input" type="number" value="${data?data.quota:40}"></div>
+                     <div class="flex items-center gap-2"><input type="checkbox" id="m_checked" ${data&&data.checked_in?'checked':''}> <label class="label mb-0">Checked In</label></div>`;
+        } else if (type === 'gift') {
+            html += `<div><label class="label">Tier</label><select id="m_tier" class="input">${lookupData.tiers.map(t=>`<option value="${t.tier_key}" ${data&&data.tier===t.tier_key?'selected':''}>${t.name}</option>`).join('')}</select></div>
+                     <div><label class="label">Name</label><input id="m_name" class="input" value="${data?data.gift_name:''}"></div>
+                     <div><label class="label">Remaining</label><input id="m_rem" class="input" type="number" value="${data?data.remaining_qty:100}"></div>
+                     <div><label class="label">Total</label><input id="m_total" class="input" type="number" value="${data?data.total_qty:100}"></div>`;
+        } else if (type === 'category') {
+            html += `<div><label class="label">Key (e.g. A)</label><input id="m_key" class="input" value="${data?data.category_key:''}"></div>
+                     <div><label class="label">Name</label><input id="m_name" class="input" value="${data?data.name:''}"></div>`;
+        } else if (type === 'booth') {
+            html += `<div><label class="label">Key</label><input id="m_key" class="input" value="${data?data.booth_key:''}"></div>
+                     <div><label class="label">Name</label><input id="m_name" class="input" value="${data?data.name:''}"></div>
+                     <div><label class="label">Category</label><select id="m_cat" class="input">${lookupData.categories.map(c=>`<option value="${c.category_key}" ${data&&data.category===c.category_key?'selected':''}>${c.name}</option>`).join('')}</select></div>
+                     <div><label class="label">Value</label><input id="m_val" class="input" type="number" value="${data?data.stamp_value:1}"></div>`;
+        } else if (type === 'tier') {
+            html += `<div><label class="label">Key</label><input id="m_key" class="input" value="${data?data.tier_key:''}"></div>
+                     <div><label class="label">Name</label><input id="m_name" class="input" value="${data?data.name:''}"></div>
+                     <div><label class="label">Required Stamps</label><input id="m_stamps" class="input" type="number" value="${data?data.required_stamps:5}"></div>
+                     <div><label class="label">Min Categories</label><input id="m_cats" class="input" type="number" value="${data?data.min_categories:1}"></div>
+                     <div class="flex items-center gap-2"><input type="checkbox" id="m_all" ${data&&data.require_all_categories?'checked':''}> <label class="label mb-0">Require All Cats</label></div>`;
+        } else if (type === 'setting') {
+            currentEditId = data.setting_key;
+            html += `<div><label class="label">${data.setting_key}</label><textarea id="m_val" class="input h-32 font-mono text-xs">${JSON.stringify(data.setting_value, null, 2)}</textarea></div>`;
+        }
+
+        document.getElementById('modal-content').innerHTML = html + '</div>';
+        document.getElementById('modal-overlay').classList.remove('hidden');
+        document.querySelectorAll('.tom-select').forEach(el => tomSelects.push(new TomSelect(el, { create: false })));
+    }
+
+    async function handleModalSubmit() {
+        let body = { id: currentEditId };
+        let method = currentEditId ? 'PUT' : 'POST';
+        let endpoint = `/api/developer/${currentModalType}s`;
+
+        if (currentModalType === 'player') body = { ...body, unique_id: document.getElementById('m_uid').value, name: document.getElementById('m_name').value, group_id: document.getElementById('m_gid').value, current_round: document.getElementById('m_round').value, player_number: document.getElementById('m_pnum').value || null };
+        else if (currentModalType === 'stamp') body = { ...body, player_id: document.getElementById('m_pid').value, booth_name: document.getElementById('m_bk').value, round_number: document.getElementById('m_round').value };
+        else if (currentModalType === 'group') body = { ...body, group_code: document.getElementById('m_code').value, quota: document.getElementById('m_quota').value, checked_in: document.getElementById('m_checked').checked };
+        else if (currentModalType === 'gift') body = { ...body, tier: document.getElementById('m_tier').value, gift_name: document.getElementById('m_name').value, remaining_qty: document.getElementById('m_rem').value, total_qty: document.getElementById('m_total').value };
+        else if (currentModalType === 'category') body = { ...body, category_key: document.getElementById('m_key').value, name: document.getElementById('m_name').value };
+        else if (currentModalType === 'booth') body = { ...body, booth_key: document.getElementById('m_key').value, name: document.getElementById('m_name').value, category: document.getElementById('m_cat').value, stamp_value: document.getElementById('m_val').value };
+        else if (currentModalType === 'tier') body = { ...body, tier_key: document.getElementById('m_key').value, name: document.getElementById('m_name').value, required_stamps: document.getElementById('m_stamps').value, min_categories: document.getElementById('m_cats').value, require_all_categories: document.getElementById('m_all').checked };
+        else if (currentModalType === 'setting') { 
+            body = { setting_key: currentEditId, setting_value: JSON.parse(document.getElementById('m_val').value) }; 
+            endpoint = '/api/developer/settings'; 
+            method = 'PUT'; 
+        }
+
+        const res = await fetch(endpoint, { method, headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken }, body: JSON.stringify(body) });
+        if (res.ok) { closeModal(); fetchData(); } else { alert('Error saving'); }
+    }
+
+    function closeModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
+    async function deleteRecord(t, id) { if (confirm('Delete?')) { await fetch(`/api/developer/${t}?id=${id}`, { method: 'DELETE', headers: { 'x-csrf-token': csrfToken } }); fetchData(); } }
+    function downloadExport(f) { window.location.href = `/api/developer/export?table=${document.getElementById('export-table-select').value}&format=${f}`; }
+    async function fetchLinks() { const res = await fetch('/api/developer/links'); const links = await res.json(); document.getElementById('links-grid').innerHTML = links.map(l => `<div class="bg-white p-6 rounded-2xl border text-center"><img src="${l.qr}" class="w-32 h-32 mx-auto mb-4" /><h4 class="font-bold text-sm">${l.name}</h4><div class="flex gap-2 mt-4"><a href="${l.url}" target="_blank" class="flex-1 bg-brand-50 text-brand-600 py-2 rounded-lg text-[10px] font-bold">OPEN</a><button onclick="navigator.clipboard.writeText('${l.url}')" class="flex-1 bg-slate-50 text-slate-600 py-2 rounded-lg text-[10px] font-bold">COPY</button></div></div>`).join(''); }
+    setInterval(() => { if (!document.hidden && !['init', 'export', 'links'].includes(currentTab)) fetchData(); }, 5000);
+    document.addEventListener('DOMContentLoaded', () => switchDevTab('players'));
+  </script>
+  <style>
+      .label { display: block; font-size: 10px; font-weight: 800; text-transform: uppercase; color: #94a3b8; margin-bottom: 4px; letter-spacing: 0.05em; }
+      .input { width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; font-size: 14px; focus:outline-none; focus:border-brand-500; appearance: none; background: white; }
+      .ts-control { border: 1px solid #e2e8f0 !important; border-radius: 8px !important; padding: 8px 12px !important; }
+  </style>
+</body>
+</html>
