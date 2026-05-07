@@ -1,4 +1,34 @@
-/* School Event Passport — Global Styles */
 *, *::before, *::after { box-sizing: border-box; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; -webkit-font-smoothing: antialiased; }
-input[type="text"], input[type="password"], select { font-size: 16px !important; /* Prevent iOS zoom */ }
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"],
+select {
+  font-size: 16px !important;
+}
+
+@media (max-width: 430px) {
+  .app-container {
+    min-height: 100dvh;
+  }
+}
+
+.safe-area-bottom {
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+}
+
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}

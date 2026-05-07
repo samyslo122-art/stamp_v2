@@ -2,208 +2,228 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title><%= title %> - <%= player.unique_id %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <script>
     tailwind.config = {
       theme: {
         extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
           colors: {
-            brand: {
-              50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 300: '#93c5fd',
-              400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8',
-              800: '#1e40af', 900: '#1e3a8a'
-            }
-          }
+            primary: { 50: '#EFF6FF', 100: '#DBEAFE', 500: '#3B82F6', 600: '#2563EB', 700: '#1D4ED8' },
+            success: { 50: '#ECFDF5', 500: '#10B981', 600: '#059669' },
+            warning: { 50: '#FFFBEB', 500: '#F59E0B', 600: '#D97706' },
+            surface: { 50: '#F8FAFC', 100: '#F1F5F9', 200: '#E2E8F0', 300: '#CBD5E1' },
+            text: { primary: '#1E293B', secondary: '#64748B', muted: '#94A3B8' },
+            catA: { 50: '#EFF6FF', 500: '#3B82F6', 600: '#2563EB' },
+            catB: { 50: '#F3E8FF', 500: '#8B5CF6', 600: '#7C3AED' },
+            catC: { 50: '#ECFEFF', 500: '#06B6D4', 600: '#0891B2' }
+          },
+          animation: { 'fade-in': 'fadeIn 0.3s ease-out', 'slide-up': 'slideUp 0.3s ease-out' },
+          keyframes: { fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } }, slideUp: { '0%': { opacity: '0', transform: 'translateY(10px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } } }
         }
       }
     }
   </script>
   <style>
-    .tab-indicator { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-    .stamp-card { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
-    .stamp-card:hover { transform: translateY(-2px); }
-    .stamp-card.pending { background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%); border: 2px dashed #cbd5e1; position: relative; overflow: hidden; }
-    .stamp-card.pending::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(59, 130, 246, 0.03) 0%, transparent 70%); animation: pulse-soft 4s ease-in-out infinite; }
-    @keyframes pulse-soft { 0%, 100% { opacity: 0.5; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1); } }
-    .stamp-card.pending:hover { border-color: #94a3b8; transform: translateY(-3px); box-shadow: 0 8px 25px -5px rgba(100,116,139,0.15), 0 4px 10px -6px rgba(100,116,139,0.1); }
-    .stamp-card.collected.cat-a { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); border-color: transparent; box-shadow: 0 4px 14px 0 rgba(59,130,246,0.3); color: white; }
-    .stamp-card.collected.cat-b { background: linear-gradient(135deg, #5b21b6 0%, #7c3aed 50%, #a855f7 100%); border-color: transparent; box-shadow: 0 6px 20px 0 rgba(139,92,246,0.4); color: white; position: relative; overflow: hidden; }
-    .stamp-card.collected.cat-b::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent); animation: shimmer 3s infinite; }
-    @keyframes shimmer { 0% { left: -100%; } 50%, 100% { left: 100%; } }
-    .stamp-card.collected.cat-c { background: linear-gradient(135deg, #0e7490 0%, #06b6d4 50%, #22d3ee 100%); border-color: transparent; position: relative; overflow: hidden; box-shadow: 0 6px 24px rgba(6,182,212,0.5), inset 0 0 30px rgba(255,255,255,0.1); }
-    .stamp-card.collected.cat-c::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent); animation: shimmer 3s infinite; }
-    .stamp-card.collected .text-sm, .stamp-card.collected .text-xs { color: rgba(255,255,255,0.95) !important; position: relative; z-index: 1; }
-    .stamp-card.collected .rounded-full { position: relative; z-index: 1; }
-    .stamp-card.collected.cat-a .rounded-full, .stamp-card.collected.cat-b .rounded-full, .stamp-card.collected.cat-c .rounded-full { background: rgba(255,255,255,0.25) !important; }
-    .stamp-card.collected.cat-c .rounded-full svg { color: white; }
-    .qr-container { background: repeating-linear-gradient(0deg, white, white 2px, #f8fafc 2px, #f8fafc 4px); }
+    * { -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: #F8FAFC; min-height: 100vh; overscroll-behavior: none; }
+    .tab-indicator { transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+    .stamp-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .stamp-card:active { transform: scale(0.98); }
+    .stamp-card.collected { box-shadow: 0 4px 12px rgba(0,0,0,0.1); position: relative; overflow: hidden; }
+    /* Category A - Blue: Animated radial glow pulse */
+    .stamp-card.cat-a.collected { background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%); box-shadow: 0 4px 20px rgba(59,130,246,0.5), inset 0 0 30px rgba(255,255,255,0.1); }
+    .stamp-card.cat-a.collected::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3) 0%, transparent 50%); animation: glow-pulse-a 2s ease-in-out infinite; }
+    @keyframes glow-pulse-a { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+    
+    /* Category B - Purple: Shimmer sweep */
+    .stamp-card.cat-b.collected { background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%); box-shadow: 0 6px 24px rgba(139,92,246,0.6), inset 0 0 30px rgba(255,255,255,0.15); }
+    .stamp-card.cat-b.collected::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent); animation: shimmer-b 2.5s ease-in-out infinite; }
+    @keyframes shimmer-b { 0% { left: -100%; } 40%, 100% { left: 100%; } }
+    
+    /* Category C - Cyan: Moving diagonal light */
+    .stamp-card.cat-c.collected { background: linear-gradient(135deg, #06B6D4 0%, #0E7490 100%); box-shadow: 0 6px 28px rgba(6,182,212,0.6), inset 0 0 40px rgba(255,255,255,0.1); }
+    .stamp-card.cat-c.collected::before { content: ''; position: absolute; top: 0; left: 0; width: 200%; height: 100%; background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.3) 50%, transparent 70%); animation: diagonal-sweep 3s linear infinite; }
+    @keyframes diagonal-sweep { 0% { transform: translateX(-50%); } 100% { transform: translateX(50%); } }
+    .stamp-card.collected .text-white { opacity: 0.95; }
+    .stamp-card.pending { background: white; border: 1px dashed #CBD5E1; }
+    .stamp-card.pending:active { border-color: #94A3B8; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
     .fade-in { animation: fadeIn 0.3s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .slide-up { animation: slideUp 0.3s ease-out; }
   </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-slate-100"
-  data-player-id="<%= player.unique_id %>">
+<body class="flex flex-col min-h-screen" data-player-id="<%= player.unique_id %>">
   <div id="toast-wrap" class="fixed right-4 top-4 z-50 max-w-sm"></div>
-  <main class="mx-auto max-w-2xl px-4 py-8">
-    <div class="fade-in">
-      <div class="rounded-2xl border border-slate-200/60 bg-white/80 backdrop-blur-sm p-5 shadow-sm">
-        <div class="flex items-center gap-4">
-          <div class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-white font-bold text-lg shadow-md">
-            <%= player.name.charAt(0).toUpperCase() %>
+
+  <!-- App Header -->
+  <header class="bg-white border-b border-surface-200 px-4 py-3 sticky top-0 z-20">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-primary-600 flex items-center justify-center text-white font-semibold">
+          <%= player.name.charAt(0).toUpperCase() %>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-base font-semibold text-text-primary"><%= player.name %></h1>
+            <div id="sse-status-dot" class="w-2 h-2 rounded-full bg-success-500"></div>
           </div>
-          <div class="min-w-0 flex-1">
-            <div class="flex items-center gap-2">
-              <h2 class="text-lg font-semibold text-slate-900 truncate"><%= player.name %></h2>
-              <div class="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200">
-                <span id="sse-status-dot" class="h-2 w-2 rounded-full bg-slate-300"></span>
-                <span id="sse-status-text" class="text-[9px] font-bold text-slate-500 uppercase tracking-tight">Syncing</span>
-              </div>
-            </div>
-            <p class="text-xs text-slate-500 truncate">Event Passport</p>
-          </div>
-          <div class="flex-shrink-0 text-right">
-            <% if (roundStatus && roundStatus.currentRound > 1) { %>
-              <div class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200 px-3 py-1.5 mb-2">
-                <svg class="h-4 w-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                <span class="text-sm font-bold text-amber-700">Round <%= roundStatus.currentRound %></span>
-              </div>
-            <% } %>
-            <div class="inline-flex items-center gap-1.5 rounded-full bg-brand-50 border border-brand-200 px-3 py-1.5">
-              <svg class="h-4 w-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
-              <span id="stamp-count" class="text-sm font-bold text-brand-700"><%= stampCount %></span>
-              <span class="text-xs text-brand-600">stamps</span>
-            </div>
-            <p class="mt-1 mr-2 font-mono text-xs text-slate-400">ID: <%= player.unique_id %></p>
-          </div>
+          <p class="text-xs text-text-muted font-mono">ID: <%= player.unique_id %></p>
         </div>
       </div>
-
-      <div class="mt-6">
-        <div class="relative rounded-xl bg-slate-100 p-1">
-          <div id="tab-indicator" class="tab-indicator absolute top-1 bottom-1 w-1/2 rounded-lg bg-white shadow-sm"></div>
-          <div class="relative flex">
-            <button id="tab-stamps" class="flex-1 flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition-colors z-10" onclick="switchTab('stamps')">
-              <svg class="h-4 w-4 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.5283 1.5999C11.7686 1.29437 12.2314 1.29437 12.4717 1.5999L14.2805 3.90051C14.4309 4.09173 14.6818 4.17325 14.9158 4.10693L17.7314 3.3089C18.1054 3.20292 18.4799 3.475 18.4946 3.86338L18.6057 6.78783C18.615 7.03089 18.77 7.24433 18.9984 7.32823L21.7453 8.33761C22.1101 8.47166 22.2532 8.91189 22.0368 9.23478L20.4078 11.666C20.2724 11.8681 20.2724 12.1319 20.4078 12.334L22.0368 14.7652C22.2532 15.0881 22.1101 15.5283 21.7453 15.6624L18.9984 16.6718C18.77 16.7557 18.615 16.9691 18.6057 17.2122L18.4946 20.1366C18.4799 20.525 18.1054 20.7971 17.7314 20.6911L14.9158 19.8931C14.6818 19.8267 14.4309 19.9083 14.2805 20.0995L12.4717 22.4001C12.2314 22.7056 11.7686 22.7056 11.5283 22.4001L9.71949 20.0995C9.56915 19.9083 9.31823 19.8267 9.08421 19.8931L6.26856 20.6911C5.89463 20.7971 5.52014 20.525 5.50539 20.1366L5.39427 17.2122C5.38503 16.9691 5.22996 16.7557 5.00164 16.6718L2.25467 15.6624C1.88986 15.5283 1.74682 15.0881 1.96317 14.7652L3.59221 12.334C3.72761 12.1319 3.72761 11.8681 3.59221 11.666L1.96317 9.23478C1.74682 8.91189 1.88986 8.47166 2.25467 8.33761L5.00165 7.32823C5.22996 7.24433 5.38503 7.03089 5.39427 6.78783L5.50539 3.86338C5.52014 3.475 5.89463 3.20292 6.26857 3.3089L9.08421 4.10693C9.31823 4.17325 9.56915 4.09173 9.71949 3.90051L11.5283 1.5999Z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12L11 14L15 10"/>
-              </svg>
-              Stamps
-            </button>
-            <button id="tab-qr" class="flex-1 flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition-colors z-10" onclick="switchTab('qr')">
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
-              QR Code
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div id="content-stamps" class="mt-6 fade-in">
-        <% if (roundStatus && roundStatus.isComplete && roundStatus.currentRound < roundStatus.maxRound) { %>
-          <div class="mb-4 rounded-xl border-2 border-amber-400 bg-amber-50 p-4">
-            <div class="flex items-center gap-3">
-              <div class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100">
-                <svg class="h-5 w-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-              </div>
-              <div>
-                <h4 class="text-sm font-bold text-amber-800">Round <%= roundStatus.currentRound %> Complete!</h4>
-                <p class="text-xs text-amber-700">Visit the redemption counter: claim your gift and reset for Round <%= roundStatus.currentRound + 1 %></p>
-              </div>
-            </div>
-          </div>
-        <% } else if (roundStatus && roundStatus.currentRound === roundStatus.maxRound) { %>
-          <div class="mb-4 rounded-xl border-2 border-emerald-400 bg-emerald-50 p-4">
-            <div class="flex items-center gap-3">
-              <div class="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100">
-                <svg class="h-5 w-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-              </div>
-              <div>
-                <h4 class="text-sm font-bold text-emerald-800">Maximum Round Reached!</h4>
-                <p class="text-xs text-emerald-700">You've completed all <%= roundStatus.maxRound %> rounds. Well done!</p>
-              </div>
-            </div>
-          </div>
+      <div class="flex items-center gap-2">
+        <% if (roundStatus && roundStatus.currentRound > 1) { %>
+          <span class="px-2 py-1 rounded-full bg-warning-50 text-warning-600 text-xs font-medium">R<%= roundStatus.currentRound %></span>
         <% } %>
+        <div class="flex items-center gap-1.5 bg-primary-50 px-3 py-1.5 rounded-full">
+          <svg class="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+          <span id="stamp-count" class="text-sm font-semibold text-primary-600"><%= stampCount %></span>
+        </div>
+      </div>
+    </div>
+  </header>
 
-        <div class="mb-4 flex items-center justify-between">
-          <h3 class="text-sm font-semibold text-slate-700">Booth Stamps</h3>
-          <div class="flex items-center gap-1.5 text-xs text-slate-500">
-            <span class="inline-flex h-2 w-2 animate-pulse rounded-full bg-emerald-500"></span>
-            Live updates
+  <!-- Main Content -->
+  <main class="flex-1 px-4 py-4 pb-24 overflow-y-auto">
+    <!-- Round Completion Banner -->
+    <% if (roundStatus && roundStatus.isComplete && roundStatus.currentRound < roundStatus.maxRound) { %>
+      <div class="mb-4 bg-warning-50 border border-warning-100 rounded-xl p-4 flex items-center gap-3 slide-up">
+        <div class="w-10 h-10 rounded-full bg-warning-100 flex items-center justify-center">
+          <svg class="w-5 h-5 text-warning-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        </div>
+        <div>
+          <p class="text-sm font-semibold text-warning-700">Round <%= roundStatus.currentRound %> Complete!</p>
+          <p class="text-xs text-warning-600">Visit counter to claim gift & continue</p>
+        </div>
+      </div>
+    <% } else if (roundStatus && roundStatus.currentRound === roundStatus.maxRound) { %>
+      <div class="mb-4 bg-success-50 border border-success-100 rounded-xl p-4 flex items-center gap-3 slide-up">
+        <div class="w-10 h-10 rounded-full bg-success-100 flex items-center justify-center">
+          <svg class="w-5 h-5 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div>
+          <p class="text-sm font-semibold text-success-700">All Rounds Complete!</p>
+          <p class="text-xs text-success-600">You've finished <%= roundStatus.maxRound %> rounds</p>
+        </div>
+      </div>
+    <% } %>
+
+    <!-- Stamps Tab Content -->
+    <div id="content-stamps" class="fade-in">
+      <% passportByCategory.forEach((category) => { %>
+        <div class="mb-6">
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center <%= category.categoryKey === 'A' ? 'bg-catA-50' : category.categoryKey === 'B' ? 'bg-catB-50' : 'bg-catC-50' %>">
+              <% if (category.categoryKey === 'A') { %>
+                <svg class="w-4 h-4 text-catA-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
+              <% } else if (category.categoryKey === 'B') { %>
+                <svg class="w-4 h-4 text-catB-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              <% } else { %>
+                <svg class="w-4 h-4 text-catC-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+              <% } %>
+            </div>
+            <div>
+              <h3 class="text-sm font-semibold text-text-primary"><%= category.categoryName %></h3>
+              <% const collected = category.booths.filter(b => b.collected).length; %>
+              <p class="text-xs text-text-muted"><%= collected %>/<%= category.booths.length %> collected</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <% category.booths.forEach((booth) => { %>
+              <div data-passport-booth="<%= booth.key %>" data-booth-name="<%= booth.name %>"
+                data-booth-value="<%= booth.stampValue %>" data-category="<%= category.categoryKey %>"
+                class="stamp-card rounded-xl p-4 <%= booth.collected ? 'collected cat-' + category.categoryKey.toLowerCase() : 'pending' %>">
+                <div class="flex flex-col items-center text-center gap-2">
+                  <div class="w-10 h-10 rounded-full flex items-center justify-center <%= booth.collected ? 'bg-white/25' : 'bg-surface-100' %>">
+                    <% if (booth.collected) { %>
+                      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                    <% } else { %>
+                      <svg class="w-5 h-5 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <% } %>
+                  </div>
+                  <div>
+                    <p class="text-sm font-medium <%= booth.collected ? 'text-white' : 'text-text-primary' %>"><%= booth.name %></p>
+                    <p class="text-xs <%= booth.collected ? 'text-white/80' : 'text-text-muted' %>"><%= booth.stampValue %> pt</p>
+                  </div>
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium <%= booth.collected ? 'bg-white/20 text-white' : 'bg-surface-100 text-text-muted' %>">
+                    <% if (booth.collected) { %>
+                      Collected
+                    <% } else { %>
+                      Pending
+                    <% } %>
+                  </span>
+                </div>
+              </div>
+            <% }) %>
           </div>
         </div>
+      <% }) %>
+    </div>
 
-        <% passportByCategory.forEach((category) => { %>
-          <div class="mb-5">
-            <div class="mb-3 flex items-center gap-2">
-              <div class="flex items-center justify-center h-8 w-8 rounded-lg <%= category.categoryKey === 'A' ? 'bg-blue-100' : category.categoryKey === 'B' ? 'bg-purple-100' : 'bg-amber-100' %>">
-                <% if (category.categoryKey === 'A') { %>
-                  <svg class="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
-                <% } else if (category.categoryKey === 'B') { %>
-                  <svg class="h-4 w-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                <% } else { %>
-                  <svg class="h-4 w-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
-                <% } %>
-              </div>
-              <div>
-                <h4 class="text-sm font-semibold text-slate-800"><%= category.categoryName %></h4>
-                <% const collected = category.booths.filter(b => b.collected).length; %>
-                <p class="text-xs text-slate-500" data-category-header="<%= category.categoryKey %>"><%= collected %>/<%= category.booths.length %> completed</p>
-              </div>
-            </div>
-            <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              <% category.booths.forEach((booth) => { %>
-                <div data-passport-booth="<%= booth.key %>" data-booth-name="<%= booth.name %>"
-                  data-booth-value="<%= booth.stampValue %>" data-category="<%= category.categoryKey %>"
-                  class="stamp-card <%= booth.collected ? 'collected cat-' + category.categoryKey.toLowerCase() : 'pending' %> rounded-xl border p-4 relative">
-                  <div class="flex flex-col items-center text-center gap-2 relative z-10">
-                    <div class="relative">
-                      <div class="flex h-11 w-11 items-center justify-center rounded-full <%= booth.collected ? 'bg-white/25' : 'bg-slate-100' %>">
-                        <% if (booth.collected) { %>
-                          <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                        <% } else { %>
-                          <svg class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        <% } %>
-                      </div>
-                    </div>
-                    <div>
-                      <p class="text-sm font-medium <%= booth.collected ? 'text-white' : 'text-slate-700' %>"><%= booth.name %></p>
-                      <p class="text-xs <%= booth.collected ? 'text-white/80' : 'text-slate-500' %>"><%= booth.stampValue %> stamp<%= booth.stampValue > 1 ? 's' : '' %></p>
-                    </div>
-                    <span class="stamp-badge inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold <%= booth.collected ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-500 border border-slate-200' %>">
-                      <% if (booth.collected) { %>
-                        <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                        Collected
-                      <% } else { %>
-                        <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        Pending
-                      <% } %>
-                    </span>
-                  </div>
-                </div>
-              <% }) %>
-            </div>
-          </div>
-        <% }) %>
-      </div>
-
-      <div id="content-qr" class="mt-6 hidden">
-        <div class="rounded-2xl border border-slate-200/60 bg-white/80 backdrop-blur-sm p-6 shadow-sm">
-          <div class="mb-4 text-center">
-            <h3 class="text-sm font-semibold text-slate-700">Your Personal QR Code</h3>
-            <p class="text-xs text-slate-500 mt-1">Show this to booth staff to collect stamps</p>
-          </div>
-          <div class="qr-container rounded-xl border-2 border-dashed border-slate-200 p-6 flex items-center justify-center">
-            <img src="<%= qrDataUrl %>" alt="Player QR Code" class="w-64 h-64 rounded-lg" />
-          </div>
+    <!-- QR Tab Content -->
+    <div id="content-qr" class="hidden">
+      <div class="bg-white rounded-2xl border border-surface-200 p-6">
+        <div class="text-center mb-4">
+          <h3 class="text-base font-semibold text-text-primary">Your QR Code</h3>
+          <p class="text-sm text-text-muted mt-1">Show to staff to collect stamps</p>
+        </div>
+        <div class="bg-surface-50 rounded-xl p-4 flex items-center justify-center">
+          <img src="<%= qrDataUrl %>" alt="Player QR Code" class="w-full max-w-[240px] rounded-lg" />
         </div>
       </div>
     </div>
   </main>
 
+  <!-- Bottom Tab Bar -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-surface-200 px-4 py-2 z-20 safe-area-bottom">
+    <div class="relative bg-surface-100 rounded-xl p-1">
+      <div id="tab-indicator" class="tab-indicator absolute top-1 bottom-1 w-1/2 rounded-lg bg-white shadow-sm"></div>
+      <div class="relative flex">
+        <button id="tab-stamps" class="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium z-10 text-primary-600" onclick="switchTab('stamps')">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+          Stamps
+        </button>
+        <button id="tab-qr" class="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium z-10 text-text-muted" onclick="switchTab('qr')">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+          QR Code
+        </button>
+      </div>
+    </div>
+  </nav>
+
   <script src="/js/common.js"></script>
   <script src="/js/player-portal.js"></script>
+  <script>
+    function switchTab(tab) {
+      const stampsTab = document.getElementById('tab-stamps');
+      const qrTab = document.getElementById('tab-qr');
+      const indicator = document.getElementById('tab-indicator');
+      const contentStamps = document.getElementById('content-stamps');
+      const contentQR = document.getElementById('content-qr');
+
+      if (tab === 'stamps') {
+        stampsTab.classList.remove('text-text-muted');
+        stampsTab.classList.add('text-primary-600');
+        qrTab.classList.remove('text-primary-600');
+        qrTab.classList.add('text-text-muted');
+        indicator.style.transform = 'translateX(0)';
+        contentStamps.classList.remove('hidden');
+        contentQR.classList.add('hidden');
+      } else {
+        qrTab.classList.remove('text-text-muted');
+        qrTab.classList.add('text-primary-600');
+        stampsTab.classList.remove('text-primary-600');
+        stampsTab.classList.add('text-text-muted');
+        indicator.style.transform = 'translateX(100%)');
+        contentStamps.classList.add('hidden');
+        contentQR.classList.remove('hidden');
+      }
+    }
+  </script>
 </body>
 </html>
