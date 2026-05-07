@@ -41,6 +41,143 @@ router.get('/api/developer/lookup-data', requireDeveloper, async (req, res) => {
   }
 });
 
+// Categories CRUD
+router.get('/api/developer/categories', requireDeveloper, async (req, res) => {
+  try {
+    const result = await db.query('SELECT * FROM categories ORDER BY category_key');
+    res.json({ rows: result.rows });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/api/developer/categories', requireDeveloper, async (req, res) => {
+  try {
+    const { category_key, name } = req.body;
+    const result = await db.query(
+      'INSERT INTO categories (category_key, name) VALUES ($1, $2) RETURNING *',
+      [category_key.toUpperCase(), name]
+    );
+    res.json({ row: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put('/api/developer/categories', requireDeveloper, async (req, res) => {
+  try {
+    const { id, category_key, name } = req.body;
+    const result = await db.query(
+      'UPDATE categories SET category_key = COALESCE($2, category_key), name = COALESCE($3, name) WHERE id = $1 RETURNING *',
+      [id, category_key ? category_key.toUpperCase() : null, name]
+    );
+    res.json({ row: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/api/developer/categories', requireDeveloper, async (req, res) => {
+  try {
+    await db.query('DELETE FROM categories WHERE id = $1', [req.query.id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Booths CRUD
+router.get('/api/developer/booths', requireDeveloper, async (req, res) => {
+  try {
+    const result = await db.query('SELECT * FROM booths ORDER BY booth_key');
+    res.json({ rows: result.rows });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/api/developer/booths', requireDeveloper, async (req, res) => {
+  try {
+    const { booth_key, name, category, stamp_value } = req.body;
+    const result = await db.query(
+      'INSERT INTO booths (booth_key, name, category, stamp_value) VALUES ($1, $2, $3, $4) RETURNING *',
+      [booth_key.toUpperCase(), name, category, stamp_value]
+    );
+    res.json({ row: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put('/api/developer/booths', requireDeveloper, async (req, res) => {
+  try {
+    const { id, booth_key, name, category, stamp_value } = req.body;
+    const result = await db.query(
+      'UPDATE booths SET booth_key = COALESCE($2, booth_key), name = COALESCE($3, name), category = COALESCE($4, category), stamp_value = COALESCE($5, stamp_value) WHERE id = $1 RETURNING *',
+      [id, booth_key ? booth_key.toUpperCase() : null, name, category, stamp_value]
+    );
+    res.json({ row: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/api/developer/booths', requireDeveloper, async (req, res) => {
+  try {
+    await db.query('DELETE FROM booths WHERE id = $1', [req.query.id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Tiers CRUD
+router.get('/api/developer/tiers', requireDeveloper, async (req, res) => {
+  try {
+    const result = await db.query('SELECT * FROM redemption_tiers ORDER BY required_stamps');
+    res.json({ rows: result.rows });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/api/developer/tiers', requireDeveloper, async (req, res) => {
+  try {
+    const { tier_key, name, required_stamps, min_categories, require_all_categories } = req.body;
+    const result = await db.query(
+      'INSERT INTO redemption_tiers (tier_key, name, required_stamps, min_categories, require_all_categories) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [tier_key.toUpperCase(), name, required_stamps, min_categories, require_all_categories]
+    );
+    res.json({ row: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put('/api/developer/tiers', requireDeveloper, async (req, res) => {
+  try {
+    const { id, tier_key, name, required_stamps, min_categories, require_all_categories } = req.body;
+    const result = await db.query(
+      'UPDATE redemption_tiers SET tier_key = COALESCE($2, tier_key), name = COALESCE($3, name), required_stamps = COALESCE($4, required_stamps), min_categories = COALESCE($5, min_categories), require_all_categories = COALESCE($6, require_all_categories) WHERE id = $1 RETURNING *',
+      [id, tier_key ? tier_key.toUpperCase() : null, name, required_stamps, min_categories, require_all_categories]
+    );
+    res.json({ row: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/api/developer/tiers', requireDeveloper, async (req, res) => {
+  try {
+    await db.query('DELETE FROM redemptions WHERE tier_claimed = (SELECT tier_key FROM redemption_tiers WHERE id = $1)', [req.query.id]);
+    await db.query('DELETE FROM gift_inventory WHERE tier = (SELECT tier_key FROM redemption_tiers WHERE id = $1)', [req.query.id]);
+    await db.query('DELETE FROM redemption_tiers WHERE id = $1', [req.query.id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Settings Management
 router.get('/api/developer/settings', requireDeveloper, async (req, res) => {
   try {
