@@ -28,6 +28,8 @@
       <h1 class="text-2xl font-bold text-slate-800">Gifts & Redemption</h1>
     </div>
 
+    
+
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
       <!-- Scanner Column -->
       <div class="lg:col-span-4 space-y-6">
@@ -163,12 +165,19 @@
         const status = t.alreadyRedeemed ? 'REDEEMED' : t.eligible ? 'AVAILABLE' : 'LOCKED';
         const colorClass = t.alreadyRedeemed ? 'bg-slate-100 border-slate-200 grayscale' : t.eligible ? 'bg-white border-emerald-300 ring-2 ring-emerald-500/10' : 'bg-white border-slate-200 opacity-60';
         
-        const giftsHtml = t.eligible ? (t.gifts || []).map(g =>
-          `<button onclick="claimGift('${t.key}','${g.name.replace(/'/g, "\\'")}')"
-            class="flex-1 rounded-xl bg-brand-600 py-3 text-xs font-bold text-white shadow-md hover:bg-brand-700 active:scale-95 transition-all">
-            CLAIM ${g.name.toUpperCase()}
-          </button>`
-        ).join('') : '';
+        const giftsHtml = t.eligible ? (t.gifts || []).map(g => {
+          const remaining = g.remaining || 0;
+          const isOutOfStock = remaining === 0;
+          const stockColor = isOutOfStock ? 'text-slate-300' : 'text-white';
+          const btnClass = isOutOfStock
+            ? 'flex-1 rounded-xl bg-slate-200 py-3 text-xs font-bold text-slate-400 cursor-not-allowed'
+            : 'flex-1 rounded-xl bg-brand-600 py-3 text-xs font-bold text-white shadow-md hover:bg-brand-700 active:scale-95 transition-all';
+          const stockLabel = isOutOfStock ? 'OUT OF STOCK' : `(${remaining} left)`;
+          return `<button onclick="${isOutOfStock ? '' : `claimGift('${t.key}','${g.name.replace(/'/g, "\\'")}',${remaining})`}"
+            class="${btnClass}" ${isOutOfStock ? 'disabled' : ''}>
+            ${isOutOfStock ? '✕ ' : '✓ '} ${g.name.toUpperCase()} <span class="${stockColor}">${stockLabel}</span>
+          </button>`;
+        }).join('') : '';
 
         return `
           <div class="rounded-2xl border-2 p-6 transition-all ${colorClass}">
@@ -177,7 +186,10 @@
                 <h3 class="font-black text-slate-800 text-lg uppercase tracking-tight">${t.name}</h3>
                 <p class="text-xs text-slate-500">${t.requiredStamps} Stamps &middot; ${t.requireAllCategories ? 'All 3 Categories' : '≥'+t.minCategories+' Categories'}</p>
               </div>
-              <span class="px-3 py-1 rounded-lg font-black text-[10px] tracking-widest ${t.eligible ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'}">${status}</span>
+              <div class="text-right">
+                ${t.eligible && t.gifts && t.gifts.length > 0 ? `<p class="text-[10px] font-bold text-slate-400">${t.gifts.length} GIFT${t.gifts.length>1?'S':''} AVAILABLE</p>` : ''}
+                <span class="mt-1 block px-3 py-1 rounded-lg font-black text-[10px] tracking-widest ${t.eligible ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'}">${status}</span>
+              </div>
             </div>
             <div class="flex gap-2">${giftsHtml || (t.alreadyRedeemed ? '<p class="text-sm font-bold text-slate-400 italic text-center w-full">Gift already claimed for this round</p>' : '')}</div>
           </div>
@@ -186,12 +198,13 @@
     }
     }
 
-    async function claimGift(tierKey, giftName) {
+    async function claimGift(tierKey, giftName, remainingStock) {
       if (!currentPlayer) return;
       
+      const stockInfo = remainingStock !== undefined ? ` (${remainingStock} currently in stock)` : '';
       const confirmed = await ConfirmModal.show({
         title: 'Confirm Redemption',
-        message: `Confirm issuing "${giftName}" to ${currentPlayer.name}? This will record the redemption and update inventory.`,
+        message: `Confirm issuing "${giftName}" to ${currentPlayer.name}?${stockInfo} This will record the redemption and update inventory.`,
         confirmText: 'Confirm Redemption'
       });
       if (!confirmed) return;
