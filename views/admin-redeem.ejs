@@ -101,23 +101,33 @@
       const id = document.getElementById('playerId').value.trim().toUpperCase();
       if (!id) return;
       try {
+        console.log('[lookupPlayer] Sending request for:', id);
         const res = await fetch('/api/admin/redemption/lookup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken },
           body: JSON.stringify({ uniqueId: id })
         });
+        console.log('[lookupPlayer] Response status:', res.status);
         const data = await res.json();
+        console.log('[lookupPlayer] Response data:', data);
         if (!res.ok) { showMsg(data.error || 'Player not found', 'error'); return; }
         currentPlayer = data;
         renderPlayer(data);
-      } catch(e) { showMsg('Connection error', 'error'); }
+      } catch(e) { console.error('[lookupPlayer] Error:', e); showMsg('Connection error: ' + e.message, 'error'); }
     }
 
     function renderPlayer(data) {
-      document.getElementById('welcome-state').classList.add('hidden');
-      document.getElementById('player-info-card').classList.remove('hidden');
-      document.getElementById('reset-zone').classList.remove('hidden');
-      
+      console.log('[renderPlayer] Starting with data:', data?.name);
+      const welcomeState = document.getElementById('welcome-state');
+      const playerCard = document.getElementById('player-info-card');
+      const resetZoneEl = document.getElementById('reset-zone');
+
+      console.log('[renderPlayer] Elements:', { welcomeState: !!welcomeState, playerCard: !!playerCard, resetZone: !!resetZoneEl });
+
+      if (welcomeState) welcomeState.classList.add('hidden');
+      if (playerCard) playerCard.classList.remove('hidden');
+      if (resetZoneEl) resetZoneEl.classList.remove('hidden');
+
       document.getElementById('p-name').textContent = data.name;
       document.getElementById('p-id').textContent = 'UID: ' + data.uniqueId;
       document.getElementById('p-stamps').textContent = data.stampTotal;
@@ -141,11 +151,14 @@
       `;
 
       const catEl = document.getElementById('p-categories');
+      if (catEl) {
       catEl.innerHTML = (data.categoriesCollected || []).map(c =>
         `<span class="px-3 py-1 rounded-full bg-white border border-brand-200 text-[10px] font-bold text-brand-700 uppercase">Category ${c}</span>`
       ).join('') || '<span class="text-xs text-slate-400 italic">No categories collected this round</span>';
+      }
 
       const tiersEl = document.getElementById('tiers-container');
+      if (tiersEl) {
       tiersEl.innerHTML = data.tiers.map(t => {
         const status = t.alreadyRedeemed ? 'REDEEMED' : t.eligible ? 'AVAILABLE' : 'LOCKED';
         const colorClass = t.alreadyRedeemed ? 'bg-slate-100 border-slate-200 grayscale' : t.eligible ? 'bg-white border-emerald-300 ring-2 ring-emerald-500/10' : 'bg-white border-slate-200 opacity-60';
@@ -171,6 +184,7 @@
         `;
       }).join('');
     }
+    }
 
     async function claimGift(tierKey, giftName) {
       if (!currentPlayer) return;
@@ -183,16 +197,19 @@
       if (!confirmed) return;
 
       try {
+        console.log('[claimGift] Sending request:', { uniqueId: currentPlayer.uniqueId, tierKey, giftName });
         const res = await fetch('/api/admin/redemption/claim', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken },
           body: JSON.stringify({ uniqueId: currentPlayer.uniqueId, tierKey, giftName })
         });
+        console.log('[claimGift] Response status:', res.status);
         const data = await res.json();
+        console.log('[claimGift] Response data:', data);
         if (!res.ok) { showMsg(data.error || 'Claim failed', 'error'); return; }
         showMsg(`SUCCESS: ${giftName} issued!`, 'success');
         lookupPlayer();
-      } catch(e) { }
+      } catch(e) { console.error('[claimGift] Error:', e); showMsg('Claim failed: ' + e.message, 'error'); }
     }
 
     async function resetRound() {
@@ -216,7 +233,7 @@
         if (!res.ok) { showMsg(data.error || 'Reset failed', 'error'); return; }
         showMsg(`PLAYER ADVANCED TO ROUND ${data.newRound}`, 'success');
         lookupPlayer();
-      } catch(e) { }
+      } catch(e) { showMsg('Reset failed. Please try again.', 'error'); }
     }
 
     function showMsg(msg, type) {

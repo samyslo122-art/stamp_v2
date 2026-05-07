@@ -4,7 +4,8 @@ const db = require('../db');
 const config = require('../config');
 const QRCode = require('qrcode');
 const requireAdmin = require('../middleware/requireAdmin');
-const socketManager = require('../socket'); // Changed from sse
+const socketManager = require('../socket');
+const sse = require('../sse');
 const {
   generateUniqueId,
   formatPlayerName,
@@ -295,6 +296,7 @@ router.post('/api/admin/stamps/revoke', requireAdmin, async (req, res) => {
 
 // POST /api/admin/redemption/lookup
 router.post('/api/admin/redemption/lookup', requireAdmin, async (req, res) => {
+  console.log('[API] /api/admin/redemption/lookup called', { body: req.body, session: req.session?.isAdmin });
   try {
     const { uniqueId } = req.body;
     if (!uniqueId) return res.status(400).json({ error: 'Player ID required' });
@@ -357,6 +359,7 @@ router.post('/api/admin/redemption/lookup', requireAdmin, async (req, res) => {
 
 // POST /api/admin/redemption/claim
 router.post('/api/admin/redemption/claim', requireAdmin, async (req, res) => {
+  console.log('[API] /api/admin/redemption/claim called', { body: req.body, session: req.session?.isAdmin });
   try {
     const { uniqueId, tierKey, giftName } = req.body;
     if (!uniqueId || !tierKey || !giftName) {
