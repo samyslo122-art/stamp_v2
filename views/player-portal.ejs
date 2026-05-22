@@ -150,7 +150,7 @@
                     <p class="text-sm font-medium <%= booth.collected ? 'text-white' : 'text-text-primary' %>"><%= booth.name %></p>
                     <p class="text-xs <%= booth.collected ? 'text-white/80' : 'text-text-muted' %>"><%= booth.stampValue %> pt</p>
                   </div>
-                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium <%= booth.collected ? 'bg-white/20 text-white' : 'bg-surface-100 text-text-muted' %>">
+                  <span class="stamp-badge inline-flex items-center px-2 py-1 rounded-full text-xs font-medium <%= booth.collected ? 'bg-white/20 text-white' : 'bg-surface-100 text-text-muted' %>">
                     <% if (booth.collected) { %>
                       Collected
                     <% } else { %>
