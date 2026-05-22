@@ -198,32 +198,5 @@
 
   <script src="/js/common.js"></script>
   <script src="/js/player-portal.js"></script>
-  <script>
-    function switchTab(tab) {
-      const stampsTab = document.getElementById('tab-stamps');
-      const qrTab = document.getElementById('tab-qr');
-      const indicator = document.getElementById('tab-indicator');
-      const contentStamps = document.getElementById('content-stamps');
-      const contentQR = document.getElementById('content-qr');
-
-      if (tab === 'stamps') {
-        stampsTab.classList.remove('text-text-muted');
-        stampsTab.classList.add('text-primary-600');
-        qrTab.classList.remove('text-primary-600');
-        qrTab.classList.add('text-text-muted');
-        indicator.style.transform = 'translateX(0)';
-        contentStamps.classList.remove('hidden');
-        contentQR.classList.add('hidden');
-      } else {
-        qrTab.classList.remove('text-text-muted');
-        qrTab.classList.add('text-primary-600');
-        stampsTab.classList.remove('text-primary-600');
-        stampsTab.classList.add('text-text-muted');
-        indicator.style.transform = 'translateX(100%)');
-        contentStamps.classList.add('hidden');
-        contentQR.classList.remove('hidden');
-      }
-    }
-  </script>
 </body>
 </html>

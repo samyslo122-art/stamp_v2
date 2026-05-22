@@ -36,7 +36,8 @@ if ($WithSchema) {
 
 # 4. Restart the app only (tunnel stays alive)
 Write-Host ""
-Write-Host "[$($WithSchema ? '4' : '3')/4] Restarting app (keeping tunnel alive)..." -ForegroundColor Yellow
+$step = $(if ($WithSchema) { '4' } else { '3' })
+Write-Host "[$step/4] Restarting app (keeping tunnel alive)..." -ForegroundColor Yellow
 pm2 restart event-passport
 
 Write-Host ""
