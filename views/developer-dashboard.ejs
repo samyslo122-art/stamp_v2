@@ -90,7 +90,15 @@
         <div id="panel-settings" class="dev-panel hidden p-6"><h2 class="text-xl font-bold mb-6">System Settings</h2><div class="overflow-x-auto"><table id="table-settings" class="w-full text-sm text-left"></table></div></div>
 
         <div id="panel-links" class="dev-panel hidden p-6"><h2 class="text-xl font-bold mb-6">Links Hub</h2><div id="links-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div></div>
-        <div id="panel-init" class="dev-panel hidden p-6 text-center py-20"><h2 class="text-2xl font-bold mb-4">Reset System</h2><p class="text-slate-500 mb-8 max-w-md mx-auto">This will re-synchronize all booths, tiers, and categories from config.js and seed inventory.</p><button onclick="initAll()" class="bg-brand-600 text-white px-8 py-4 rounded-2xl font-bold shadow-xl">RE-INITIALISE FROM CONFIG.JS</button></div>
+        <div id="panel-init" class="dev-panel hidden p-6 text-center py-20">
+          <h2 class="text-2xl font-bold mb-4">Reset System</h2>
+          <p class="text-slate-500 mb-8 max-w-md mx-auto">This will re-synchronize all booths, tiers, and categories from config.js and seed inventory.</p>
+          <button onclick="initAll()" class="bg-brand-600 text-white px-8 py-4 rounded-2xl font-bold shadow-xl">RE-INITIALISE FROM CONFIG.JS</button>
+          <hr class="my-10 border-slate-200 max-w-xs mx-auto" />
+          <h2 class="text-xl font-bold mb-4 text-red-600">Clear Entire Database</h2>
+          <p class="text-red-500 mb-8 max-w-md mx-auto text-sm">This will permanently delete ALL players, stamps, redemptions, groups, gift inventory, booths, categories, tiers, and settings. This action cannot be undone.</p>
+          <button onclick="clearAll()" class="bg-red-600 text-white px-8 py-4 rounded-2xl font-bold shadow-xl hover:bg-red-700">CLEAR ENTIRE DATABASE</button>
+        </div>
         <div id="panel-export" class="dev-panel hidden p-6 text-center py-20"><h2 class="text-2xl font-bold mb-8">Data Export</h2><div class="max-w-md mx-auto space-y-4"><div><label class="label text-left">Table</label><select id="export-table-select" class="input"><option value="players">Players</option><option value="stamps">Stamps</option><option value="redemptions">Redemptions</option><option value="groups">Groups</option><option value="gift_inventory">Gifts</option><option value="booths">Booths Config</option><option value="categories">Categories Config</option></select></div><div class="flex justify-center gap-4 pt-4"><button onclick="downloadExport('csv')" class="bg-white border-2 border-slate-200 px-6 py-3 rounded-xl font-bold">CSV</button><button onclick="downloadExport('json')" class="bg-white border-2 border-slate-200 px-6 py-3 rounded-xl font-bold">JSON</button></div></div></div>
     </div>
   </main>
@@ -267,6 +275,25 @@
     async function deleteRecord(t, id) { if (confirm('Delete?')) { await fetch(`/api/developer/${t}?id=${id}`, { method: 'DELETE', headers: { 'x-csrf-token': csrfToken } }); fetchData(); } }
     function downloadExport(f) { window.location.href = `/api/developer/export?table=${document.getElementById('export-table-select').value}&format=${f}`; }
     async function fetchLinks() { const res = await fetch('/api/developer/links'); const links = await res.json(); document.getElementById('links-grid').innerHTML = links.map(l => `<div class="bg-white p-6 rounded-2xl border text-center"><img src="${l.qr}" class="w-32 h-32 mx-auto mb-4" /><h4 class="font-bold text-sm">${l.name}</h4><div class="flex gap-2 mt-4"><a href="${l.url}" target="_blank" class="flex-1 bg-brand-50 text-brand-600 py-2 rounded-lg text-[10px] font-bold">OPEN</a><button onclick="navigator.clipboard.writeText('${l.url}')" class="flex-1 bg-slate-50 text-slate-600 py-2 rounded-lg text-[10px] font-bold">COPY</button></div></div>`).join(''); }
+    async function initAll() {
+      if (!confirm('Re-synchronise all booths, tiers, categories, groups, and gift inventory from config.js?')) return;
+      try {
+        const res = await fetch('/api/developer/init-all', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken } });
+        const data = await res.json();
+        if (res.ok) { alert('Initialisation complete. Config re-synchronised.'); fetchData(); fetchStats(); }
+        else { alert('Error: ' + (data.error || 'Unknown error')); }
+      } catch (e) { alert('Network error: ' + e.message); }
+    }
+    async function clearAll() {
+      if (!confirm('ARE YOU SURE? This will permanently delete ALL data. Type "yes" to confirm.')) return;
+      if (prompt('Type "yes" to confirm clearing the entire database:') !== 'yes') return;
+      try {
+        const res = await fetch('/api/developer/clear-all', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken } });
+        const data = await res.json();
+        if (res.ok) { alert('All data cleared successfully.'); fetchData(); fetchStats(); }
+        else { alert('Error: ' + (data.error || 'Unknown error')); }
+      } catch (e) { alert('Network error: ' + e.message); }
+    }
     setInterval(() => { if (!document.hidden && !['init', 'export', 'links'].includes(currentTab)) fetchData(); }, 5000);
     document.addEventListener('DOMContentLoaded', () => switchDevTab('players'));
   </script>

@@ -641,4 +641,30 @@ router.post('/api/developer/init-all', requireDeveloper, async (req, res) => {
   }
 });
 
+// Clear All
+router.post('/api/developer/clear-all', requireDeveloper, async (req, res) => {
+  const client = await db.getClient();
+  try {
+    await client.query('BEGIN');
+    await client.query('DELETE FROM redemptions');
+    await client.query('DELETE FROM stamps');
+    await client.query('DELETE FROM players');
+    await client.query('DELETE FROM booths');
+    await client.query('DELETE FROM gift_inventory');
+    await client.query('DELETE FROM groups');
+    await client.query('DELETE FROM categories');
+    await client.query('DELETE FROM redemption_tiers');
+    await client.query('DELETE FROM system_settings');
+    await client.query('DELETE FROM security_logs');
+    await client.query("ALTER SEQUENCE player_number_seq RESTART WITH 1");
+    await client.query('COMMIT');
+    res.json({ message: 'All data cleared successfully.' });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+});
+
 module.exports = router;
