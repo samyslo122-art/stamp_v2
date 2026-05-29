@@ -11,7 +11,7 @@ Write-Host "Starting School Event Passport..." -ForegroundColor Cyan
 Write-Host "==================================================" -ForegroundColor Cyan
 
 Write-Host "Ensuring database container is running..." -ForegroundColor Yellow
-docker start event_passport_db
+docker compose -f "$PSScriptRoot/../docker-compose.yml" up -d postgres
 
 Write-Host "Waiting for PostgreSQL to accept connections..." -ForegroundColor Yellow
 Start-Sleep -Seconds 3
