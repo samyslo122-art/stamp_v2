@@ -11,71 +11,119 @@
   </script>
   <link rel="stylesheet" href="/css/style.css" />
   <style>
-    #qr-reader { border: none !important; }
-    #qr-reader video { object-fit: cover; border-radius: 1rem; }
-    .scan-overlay { position: absolute; inset: 0; border: 4px solid #3b82f6; border-radius: 1rem; animation: pulse-border 2s infinite; pointer-events: none; z-index: 10; }
-    @keyframes pulse-border { 0%, 100% { opacity: 0.3; transform: scale(0.98); } 50% { opacity: 0.7; transform: scale(1); } }
+    .scanner-wrap { max-width: 360px; margin: 0 auto; }
   </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50">
+<body class="min-h-screen bg-slate-50">
   <%- include('partials/admin-nav', { active: 'group-checkin' }) %>
   <%- include('partials/modal') %>
-  <main class="mx-auto max-w-2xl px-4 py-6">
-    <div class="flex items-center gap-3 mb-6">
-      <div class="h-10 w-10 rounded-xl bg-brand-600 flex items-center justify-center text-white shadow-lg">
+
+  <!-- Toast Container -->
+  <div id="toast-wrap" class="fixed top-4 right-4 z-50 flex flex-col items-end max-w-sm pointer-events-none"></div>
+
+  <main class="mx-auto max-w-6xl px-4 py-8">
+    <div class="flex items-center gap-3 mb-8">
+      <div class="h-11 w-11 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md">
         <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
       </div>
-      <h1 class="text-2xl font-bold text-slate-800">Group Check-in</h1>
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900">Group Check-in</h1>
+        <p class="text-sm text-slate-500">Scan a QR code or enter a group code to manage check-ins</p>
+      </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div class="space-y-4">
-        <!-- Always-On Scanner -->
-        <div class="relative rounded-2xl bg-black aspect-square overflow-hidden shadow-lg border-4 border-white">
-          <div id="qr-reader" class="w-full h-full"></div>
-          <div id="scanner-overlay" class="scan-overlay"></div>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div class="lg:col-span-5 space-y-6">
+        <!-- QR Scanner Card -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="px-5 py-4 border-b border-slate-100">
+            <div class="flex items-center gap-2">
+              <svg class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+              <span class="text-sm font-semibold text-slate-700">QR Scanner</span>
+            </div>
+          </div>
+          <div class="p-4 scanner-wrap">
+            <div class="scanner-viewport">
+              <div id="qr-reader"></div>
+              <div class="scan-corner scan-corner-tl"></div>
+              <div class="scan-corner scan-corner-tr"></div>
+              <div class="scan-corner scan-corner-bl"></div>
+              <div class="scan-corner scan-corner-br"></div>
+            </div>
+          </div>
         </div>
 
-        <div class="rounded-2xl border border-slate-200/60 bg-white/80 backdrop-blur-sm p-5 shadow-sm">
-          <label for="groupCode" class="block text-sm font-semibold text-slate-700 mb-1.5">Manual Entry</label>
-          <input id="groupCode" type="text" maxlength="20"
-            class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-lg font-mono uppercase text-center focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 focus:outline-none transition-all"
-            placeholder="SCAN OR TYPE CODE" autocomplete="off" />
+        <!-- Manual Entry Card -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="px-5 py-4 border-b border-slate-100">
+            <div class="flex items-center gap-2">
+              <svg class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              <span class="text-sm font-semibold text-slate-700">Manual Entry</span>
+            </div>
+          </div>
+          <div class="p-5">
+            <input id="groupCode" type="text" maxlength="20"
+              class="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-lg font-mono uppercase text-center tracking-wider focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all placeholder:text-slate-400 placeholder:tracking-normal"
+              placeholder="Enter group code..." autocomplete="off" />
+            <p class="text-xs text-slate-400 mt-2 text-center">Type a group code or scan the QR code above</p>
+          </div>
         </div>
       </div>
 
-      <div class="space-y-4">
-        <div id="group-info" class="hidden h-full rounded-2xl border border-slate-200/60 bg-white/80 backdrop-blur-sm p-6 shadow-sm flex flex-col">
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-lg font-bold text-slate-800">Group Status</h2>
-            <span id="checkin-badge" class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider"></span>
+      <div class="lg:col-span-7 space-y-6">
+        <div id="no-group-selected" class="bg-white rounded-xl shadow-sm border border-slate-200 p-10 flex flex-col items-center justify-center text-center min-h-[400px]">
+          <div class="h-16 w-16 rounded-full bg-slate-100 flex items-center justify-center mb-5">
+            <svg class="h-8 w-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
           </div>
-          
-          <div class="grid grid-cols-1 gap-4 mb-auto">
-            <div class="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100">
-              <span class="text-sm font-medium text-slate-500">Group Code</span>
-              <span id="info-code" class="text-base font-bold font-mono text-slate-800"></span>
-            </div>
-            <div class="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100">
-              <span class="text-sm font-medium text-slate-500">Registration</span>
-              <span id="info-stats" class="text-base font-bold text-slate-800"></span>
-            </div>
-            <div class="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100">
-              <span class="text-sm font-medium text-slate-500">Available Slots</span>
-              <span id="info-remaining" class="text-base font-bold text-emerald-600"></span>
-            </div>
-          </div>
-
-          <div id="checkin-action" class="mt-6"></div>
-          <div id="checkin-msg" class="hidden mt-4 rounded-xl p-4 text-sm font-medium border"></div>
+          <h3 class="text-lg font-semibold text-slate-800 mb-1">No Group Selected</h3>
+          <p class="text-sm text-slate-500 max-w-xs">Scan a group QR code or enter the group code manually to view details and manage check-ins.</p>
         </div>
 
-        <div id="no-group-selected" class="h-full min-h-[300px] flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-8 text-center">
-          <div class="h-16 w-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-4">
-            <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+        <!-- Group Info Card -->
+        <div id="group-info" class="hidden bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <!-- Header -->
+          <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="h-9 w-9 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              </div>
+              <h2 class="text-lg font-bold text-slate-900">Group Status</h2>
+            </div>
+            <span id="checkin-badge" class="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-bold uppercase tracking-wider"></span>
           </div>
-          <p class="text-slate-500 font-medium">No Group Selected</p>
-          <p class="text-xs text-slate-400 mt-1">Scan a QR code or type above to look up group details</p>
+
+          <!-- Body -->
+          <div class="p-5 space-y-4">
+            <div class="flex items-center justify-between bg-slate-50 rounded-lg px-5 py-4 border border-slate-100">
+              <div class="flex items-center gap-3">
+                <svg class="h-5 w-5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                <span class="text-sm font-medium text-slate-500">Group Code</span>
+              </div>
+              <span id="info-code" class="text-base font-bold font-mono text-slate-900"></span>
+            </div>
+
+            <div class="flex items-center justify-between bg-slate-50 rounded-lg px-5 py-4 border border-slate-100">
+              <div class="flex items-center gap-3">
+                <svg class="h-5 w-5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+                <span class="text-sm font-medium text-slate-500">Registration</span>
+              </div>
+              <span id="info-stats" class="text-base font-bold text-slate-900"></span>
+            </div>
+
+            <div class="flex items-center justify-between bg-slate-50 rounded-lg px-5 py-4 border border-slate-100">
+              <div class="flex items-center gap-3">
+                <svg class="h-5 w-5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                <span class="text-sm font-medium text-slate-500">Available Slots</span>
+              </div>
+              <span id="info-remaining" class="text-base font-bold"></span>
+            </div>
+          </div>
+
+          <!-- Action Footer -->
+          <div class="px-5 py-4 border-t border-slate-100 bg-slate-50/50">
+            <div id="checkin-action"></div>
+            <div id="checkin-msg" class="hidden mt-4 rounded-lg p-4 text-sm font-medium border"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -127,13 +175,13 @@
       const actionDiv = document.getElementById('checkin-action');
       
       if (g.checked_in) {
-        badge.className = 'inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200';
+        badge.className = 'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200';
         badge.textContent = 'CHECKED IN';
-        actionDiv.innerHTML = '<div class="p-4 rounded-xl bg-emerald-50 text-emerald-700 text-sm font-medium border border-emerald-100 text-center">✓ Registration is active for this group</div>';
+        actionDiv.innerHTML = '<div class="flex items-center gap-3 justify-center rounded-lg bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-700 border border-emerald-100"><svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>Registration is active for this group</span></div>';
       } else {
-        badge.className = 'inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold bg-amber-100 text-amber-700 border border-amber-200';
+        badge.className = 'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-bold bg-amber-100 text-amber-700 border border-amber-200';
         badge.textContent = 'PENDING';
-        actionDiv.innerHTML = `<button onclick="confirmCheckin('${g.group_code}')" class="w-full rounded-xl bg-brand-600 px-4 py-4 text-base font-bold text-white shadow-lg hover:bg-brand-700 active:scale-95 transition-all">Confirm Group Check-in</button>`;
+        actionDiv.innerHTML = `<button onclick="confirmCheckin('${g.group_code}')" class="w-full flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-3.5 text-base font-bold text-white shadow-sm hover:bg-blue-700 active:scale-[0.98] transition-all"><svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Confirm Group Check-in</button>`;
       }
       hideMsg();
     }
@@ -168,16 +216,27 @@
     }
     function hideMsg() { document.getElementById('checkin-msg').classList.add('hidden'); }
 
+    function scanSuccessFlash() {
+      const vp = document.querySelector('.scanner-viewport');
+      if (!vp) return;
+      const flash = document.createElement('div');
+      flash.className = 'scan-success-flash';
+      flash.innerHTML = '<svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>';
+      vp.appendChild(flash);
+      setTimeout(() => flash.remove(), 900);
+      document.querySelectorAll('.scan-corner').forEach(el => el.style.setProperty('--scan-clr', '#10b981'));
+      setTimeout(() => document.querySelectorAll('.scan-corner').forEach(el => el.style.setProperty('--scan-clr', '#3b82f6')), 1500);
+    }
+
     function initScanner() {
       html5QrCode = new Html5Qrcode("qr-reader");
       html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, (text) => {
         const now = Date.now();
         if (now - lastScanTime < 2000) return;
         lastScanTime = now;
+        scanSuccessFlash();
         const code = text.trim().toUpperCase();
         groupInput.value = code;
-        document.getElementById('scanner-overlay').style.borderColor = '#10b981';
-        setTimeout(() => { document.getElementById('scanner-overlay').style.borderColor = '#3b82f6'; }, 1000);
         lookupGroup(code);
       }).catch(err => {
         console.error("Scanner init failed", err);

@@ -32,3 +32,77 @@ select {
     padding-bottom: env(safe-area-inset-bottom);
   }
 }
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fade-in 0.25s ease-out;
+}
+
+/* Scanner container */
+.scanner-wrap {
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+/* ── QR Scanner (modern, minimal) ── */
+#qr-reader {
+  border: none !important;
+  background: transparent !important;
+}
+#qr-reader video {
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  border-radius: 0.5rem;
+}
+#qr-reader > *:not(video) {
+  display: none !important;
+}
+
+/* Scanner viewport */
+.scanner-viewport {
+  position: relative;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: #000;
+}
+
+/* Corner brackets — thin, elegant, with subtle glow */
+.scan-corner {
+  position: absolute;
+  z-index: 11;
+  width: 28px;
+  height: 28px;
+  border-color: var(--scan-clr, #3b82f6);
+  border-style: solid;
+  filter: drop-shadow(0 0 4px var(--scan-clr, #3b82f6));
+  transition: border-color 0.3s;
+}
+.scan-corner-tl { top: 16px; left: 16px; border-width: 2.5px 0 0 2.5px; border-radius: 3px 0 0 0; }
+.scan-corner-tr { top: 16px; right: 16px; border-width: 2.5px 2.5px 0 0; border-radius: 0 3px 0 0; }
+.scan-corner-bl { bottom: 16px; left: 16px; border-width: 0 0 2.5px 2.5px; border-radius: 0 0 0 3px; }
+.scan-corner-br { bottom: 16px; right: 16px; border-width: 0 2.5px 2.5px 0; border-radius: 0 0 3px 0; }
+
+/* Success flash — green overlay with checkmark that fades */
+@keyframes scan-success {
+  0% { opacity: 0; transform: scale(0.5); }
+  20% { opacity: 1; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1); }
+}
+.scan-success-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  background: rgba(16, 185, 129, 0.5);
+  backdrop-filter: blur(2px);
+  animation: scan-success 0.8s ease-out forwards;
+  pointer-events: none;
+}

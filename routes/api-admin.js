@@ -202,48 +202,18 @@ router.post('/api/admin/stamps/issue', requireAdmin, async (req, res) => {
       [player.id, booth.key, booth.category, booth.stampValue, player.current_round]
     );
 
-    // Auto-renew (advance round) logic:
-    // Check if player has collected all stamps (12 points)
-    const pointsResult = await db.query(
-      'SELECT SUM(stamp_value)::int as total FROM stamps WHERE player_id = $1 AND round_number = $2',
-      [player.id, player.current_round]
-    );
-    const totalPoints = pointsResult.rows[0].total || 0;
-    
-    let autoRenewed = false;
-    let newRound = player.current_round;
-
-    if (totalPoints >= 12) {
-      const settings = await db.loadSettings();
-      const resetResult = await db.query(
-        'SELECT * FROM reset_player_round($1, $2)',
-        [player.id, settings.MAX_ROUNDS || 5]
-      );
-      const result = resetResult.rows[0];
-      if (result.success) {
-        autoRenewed = true;
-        newRound = result.new_round;
-        // Socket push for round reset - send this FIRST
-        socketManager.sendEvent(player.unique_id, 'student:update', { type: 'round_reset', newRound });
-      }
-    }
-
     // Socket push to player
     socketManager.sendEvent(player.unique_id, 'stamp:issued', {
       boothKey: booth.key,
       boothName: booth.name,
-      stampValue: booth.stampValue,
-      autoRenewed,
-      newRound
+      stampValue: booth.stampValue
     });
 
     res.json({
       success: true,
       playerName: player.name,
       boothName: booth.name,
-      stampValue: booth.stampValue,
-      autoRenewed,
-      newRound
+      stampValue: booth.stampValue
     });
   } catch (err) {
     console.error('Stamp issue error:', err);

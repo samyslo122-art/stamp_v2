@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Stamp Issue — Admin</title>
+  <title>Stamp Station — Admin</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script>
@@ -11,66 +11,106 @@
   </script>
   <link rel="stylesheet" href="/css/style.css" />
   <style>
-    #qr-reader { border: none !important; }
-    #qr-reader video { object-fit: cover; border-radius: 1rem; }
-    .scan-overlay { position: absolute; inset: 0; border: 4px solid #3b82f6; border-radius: 1rem; animation: pulse-border 2s infinite; pointer-events: none; z-index: 10; }
-    @keyframes pulse-border { 0%, 100% { opacity: 0.3; transform: scale(0.98); } 50% { opacity: 0.7; transform: scale(1); } }
+    #toast-wrap { position: fixed; top: 1rem; right: 1rem; z-index: 100; display: flex; flex-direction: column; align-items: flex-end; pointer-events: none; }
+    #toast-wrap > * { pointer-events: auto; }
   </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50">
+<body class="min-h-screen bg-slate-50">
   <%- include('partials/admin-nav', { active: 'booth' }) %>
   <%- include('partials/modal') %>
-  <main class="mx-auto max-w-4xl px-4 py-6">
-    <div class="flex items-center gap-3 mb-6">
-      <div class="h-10 w-10 rounded-xl bg-brand-600 flex items-center justify-center text-white shadow-lg">
+
+  <div id="toast-wrap"></div>
+
+  <main class="mx-auto max-w-6xl px-4 py-8">
+    <div class="flex items-center gap-3 mb-8">
+      <div class="h-11 w-11 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md">
         <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
       </div>
-      <h1 class="text-2xl font-bold text-slate-800">Stamp Station</h1>
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900">Stamp Station</h1>
+        <p class="text-sm text-slate-500">Issue or revoke player stamps by booth</p>
+      </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
       <div class="lg:col-span-5 space-y-6">
-        <div class="relative rounded-2xl bg-black aspect-square overflow-hidden shadow-xl border-4 border-white">
-          <div id="qr-reader" class="w-full h-full"></div>
-          <div id="scanner-overlay" class="scan-overlay"></div>
-        </div>
-
-        <div class="rounded-2xl border border-slate-200/60 bg-white/80 backdrop-blur-sm p-6 shadow-sm">
-          <div class="space-y-4">
-            <div>
-              <label for="boothSelect" class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Active Station</label>
-              <select id="boothSelect"
-                class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base font-bold text-slate-800 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 focus:outline-none transition-all appearance-none shadow-sm">
-                <option value="">— SELECT BOOTH —</option>
-                <% booths.forEach(function(b) { %>
-                  <option value="<%= b.key %>" data-name="<%= b.name %>">
-                    <%= b.name %> (Cat <%= b.category %>)
-                  </option>
-                <% }) %>
-              </select>
-            </div>
-            <div>
-              <label for="playerId" class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Player Unique ID</label>
-              <input id="playerId" type="text" maxlength="6"
-                class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-lg font-mono text-center uppercase focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 focus:outline-none transition-all shadow-sm"
-                placeholder="AB12C3" autocomplete="off" />
-            </div>
-            <div class="grid grid-cols-2 gap-3 pt-2">
-              <button onclick="issueStamp()" class="rounded-xl bg-emerald-600 py-4 text-sm font-bold text-white shadow-lg hover:bg-emerald-700 active:scale-95 transition-all">ISSUE STAMP</button>
-              <button onclick="revokeStamp()" class="rounded-xl bg-slate-100 py-4 text-sm font-bold text-slate-600 border border-slate-200 hover:bg-slate-200 active:scale-95 transition-all">REVOKE</button>
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="px-5 py-4 border-b border-slate-100">
+            <div class="flex items-center gap-2">
+              <svg class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+              <span class="text-sm font-semibold text-slate-700">QR Scanner</span>
             </div>
           </div>
-          <div id="stamp-msg" class="hidden mt-4 rounded-xl p-4 text-sm font-medium border text-center"></div>
+          <div class="p-4 scanner-wrap">
+            <div class="scanner-viewport">
+              <div id="qr-reader"></div>
+              <div class="scan-corner scan-corner-tl"></div>
+              <div class="scan-corner scan-corner-tr"></div>
+              <div class="scan-corner scan-corner-bl"></div>
+              <div class="scan-corner scan-corner-br"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="px-5 py-4 border-b border-slate-100">
+            <div class="flex items-center gap-2">
+              <svg class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              <span class="text-sm font-semibold text-slate-700">Stamp Actions</span>
+            </div>
+          </div>
+          <div class="p-5 space-y-5">
+            <div>
+              <label for="boothSelect" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Booth</label>
+              <div class="relative">
+                <select id="boothSelect"
+                  class="w-full appearance-none rounded-lg border border-slate-300 bg-white px-4 py-2.5 pr-10 text-sm font-medium text-slate-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-shadow">
+                  <option value="">— Select Booth —</option>
+                  <% booths.forEach(function(b) { %>
+                    <option value="<%= b.key %>" data-name="<%= b.name %>">
+                      <%= b.name %> (Cat <%= b.category %>)
+                    </option>
+                  <% }) %>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                  <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </div>
+              </div>
+            </div>
+            <div>
+              <label for="playerId" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Player ID</label>
+              <input id="playerId" type="text" maxlength="6"
+                class="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-lg font-mono text-center uppercase tracking-widest focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-shadow placeholder:text-slate-300"
+                placeholder="AB12C3" autocomplete="off" />
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <button onclick="issueStamp()" class="rounded-lg bg-emerald-600 py-3 text-sm font-bold text-white shadow-sm hover:bg-emerald-700 active:scale-[0.97] transition-all">Issue Stamp</button>
+              <button onclick="revokeStamp()" class="rounded-lg bg-white py-3 text-sm font-semibold text-slate-600 border border-slate-300 shadow-sm hover:bg-slate-50 active:scale-[0.97] transition-all">Revoke</button>
+            </div>
+          </div>
+          <div id="stamp-msg" class="hidden px-5 pb-5">
+            <div class="rounded-lg p-3 text-sm font-medium border text-center"></div>
+          </div>
         </div>
       </div>
 
       <div class="lg:col-span-7 space-y-6">
-        <div class="rounded-2xl border border-slate-200/60 bg-white/80 backdrop-blur-sm p-6 shadow-sm min-h-full">
-          <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-6">Live Activity Log</h3>
-          <div id="activity-log" class="space-y-3">
-             <div class="flex flex-col items-center justify-center py-12 text-center text-slate-400">
-               <p class="text-sm">Ready to issue stamps. Activity will appear here.</p>
-             </div>
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <svg class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              <span class="text-sm font-semibold text-slate-700">Activity Log</span>
+            </div>
+            <span id="log-count" class="text-xs text-slate-400 font-medium">0 entries</span>
+          </div>
+          <div class="p-5">
+            <div id="activity-log" class="space-y-2 min-h-[320px]">
+              <div class="flex flex-col items-center justify-center py-16 text-center text-slate-400">
+                <svg class="h-10 w-10 mb-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <p class="text-sm font-medium">No activity yet</p>
+                <p class="text-xs text-slate-300 mt-1">Scan a QR code or enter a player ID to begin</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -89,17 +129,26 @@
       const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       logData.unshift({ msg, type, playerName, time });
       if (logData.length > 20) logData.pop();
-      
+
+      const countEl = document.getElementById('log-count');
+      if (countEl) countEl.textContent = logData.length + ' entr' + (logData.length === 1 ? 'y' : 'ies');
+
       container.innerHTML = logData.map(l => {
-        const bg = l.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-red-50 border-red-100 text-red-800';
-        const icon = l.type === 'success' ? '✓' : '×';
+        const isSuccess = l.type === 'success';
+        const bg = isSuccess ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200';
+        const textColor = isSuccess ? 'text-emerald-800' : 'text-red-800';
+        const iconColor = isSuccess ? 'text-emerald-600' : 'text-red-500';
+        const iconBg = isSuccess ? 'bg-emerald-100' : 'bg-red-100';
+        const iconSvg = isSuccess
+          ? '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>'
+          : '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>';
         return `
-          <div class="flex items-center gap-4 p-4 rounded-xl border ${bg} animate-fadeIn">
-            <span class="font-mono text-xs opacity-50 shrink-0">${l.time}</span>
-            <span class="h-6 w-6 rounded-full flex items-center justify-center bg-white/50 font-bold shrink-0">${icon}</span>
-            <div class="flex-1">
-               <p class="text-sm font-bold">${l.playerName}</p>
-               <p class="text-xs opacity-80">${l.msg}</p>
+          <div class="flex items-start gap-3 p-3 rounded-lg border ${bg} animate-fade-in">
+            <span class="font-mono text-xs text-slate-400 shrink-0 mt-0.5 min-w-[4.5rem]">${l.time}</span>
+            <span class="h-6 w-6 rounded-full flex items-center justify-center shrink-0 ${iconBg} ${iconColor}">${iconSvg}</span>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-semibold ${textColor} truncate">${l.playerName}</p>
+              <p class="text-xs ${textColor} opacity-80">${l.msg}</p>
             </div>
           </div>
         `;
@@ -119,7 +168,7 @@
         confirmText: 'Issue Stamp'
       });
       if (!confirmed) return;
-      
+
       try {
         const res = await fetch('/api/admin/stamps/issue', {
           method: 'POST',
@@ -131,15 +180,8 @@
            showMsg(data.error || 'Issue failed', 'error');
            addLog(data.error || 'Failed to issue', 'error', id);
         } else {
-           let msg = `STAMP ISSUED: ${data.playerName}`;
-           if (data.autoRenewed) {
-             msg += ` (Auto-Renewed to Round ${data.newRound})`;
-           }
-           showMsg(msg, 'success');
+           showMsg(`STAMP ISSUED: ${data.playerName}`, 'success');
            addLog(`Stamped at ${data.boothName}`, 'success', data.playerName);
-           if (data.autoRenewed) {
-             addLog(`Round auto-advanced to ${data.newRound}`, 'success', data.playerName);
-           }
            document.getElementById('playerId').value = '';
         }
       } catch(e) { }
@@ -159,7 +201,7 @@
         type: 'danger'
       });
       if (!confirmed) return;
-      
+
       try {
         const res = await fetch('/api/admin/stamps/revoke', {
           method: 'POST',
@@ -181,10 +223,22 @@
     function showMsg(msg, type) {
       const el = document.getElementById('stamp-msg');
       el.classList.remove('hidden','bg-red-50','text-red-700','bg-emerald-50','text-emerald-700');
-      el.className = `mt-4 rounded-xl p-4 text-sm font-medium border text-center ${type === 'error' ? 'bg-red-50 text-red-700 border-red-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100'}`;
+      el.className = `mt-4 rounded-lg p-3 text-sm font-medium border text-center ${type === 'error' ? 'bg-red-50 text-red-700 border-red-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100'}`;
       el.textContent = msg;
       el.classList.remove('hidden');
       setTimeout(() => el.classList.add('hidden'), 4000);
+    }
+
+    function scanSuccessFlash() {
+      const vp = document.querySelector('.scanner-viewport');
+      if (!vp) return;
+      const flash = document.createElement('div');
+      flash.className = 'scan-success-flash';
+      flash.innerHTML = '<svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>';
+      vp.appendChild(flash);
+      setTimeout(() => flash.remove(), 900);
+      document.querySelectorAll('.scan-corner').forEach(el => el.style.setProperty('--scan-clr', '#10b981'));
+      setTimeout(() => document.querySelectorAll('.scan-corner').forEach(el => el.style.setProperty('--scan-clr', '#3b82f6')), 1500);
     }
 
     function initScanner() {
@@ -193,14 +247,14 @@
         const now = Date.now();
         if (now - lastScanTime < 2000) return;
         lastScanTime = now;
-        
+
+        scanSuccessFlash();
+
         let id = text.trim();
         const match = id.match(/\/player\/([A-Z0-9]{6})/i);
         if (match) id = match[1];
-        
+
         document.getElementById('playerId').value = id.toUpperCase();
-        document.getElementById('scanner-overlay').style.borderColor = '#10b981';
-        setTimeout(() => { document.getElementById('scanner-overlay').style.borderColor = '#3b82f6'; }, 1000);
       }).catch(err => { });
     }
 

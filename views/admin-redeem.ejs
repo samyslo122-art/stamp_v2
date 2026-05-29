@@ -11,82 +11,143 @@
   </script>
   <link rel="stylesheet" href="/css/style.css" />
   <style>
-    #qr-reader { border: none !important; }
-    #qr-reader video { object-fit: cover; border-radius: 1rem; }
-    .scan-overlay { position: absolute; inset: 0; border: 4px solid #3b82f6; border-radius: 1rem; animation: pulse-border 2s infinite; pointer-events: none; z-index: 10; }
-    @keyframes pulse-border { 0%, 100% { opacity: 0.3; transform: scale(0.98); } 50% { opacity: 0.7; transform: scale(1); } }
+    .scanner-wrap { max-width: 360px; margin: 0 auto; }
   </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50">
+<body class="min-h-screen bg-slate-50">
   <%- include('partials/admin-nav', { active: 'redeem' }) %>
   <%- include('partials/modal') %>
-  <main class="mx-auto max-w-5xl px-4 py-6">
-    <div class="flex items-center gap-3 mb-6">
-      <div class="h-10 w-10 rounded-xl bg-brand-600 flex items-center justify-center text-white shadow-lg">
+
+  <!-- Toast Container -->
+  <div id="toast-wrap" class="fixed top-4 right-4 z-50 flex flex-col items-end max-w-sm pointer-events-none"></div>
+
+  <main class="mx-auto max-w-6xl px-4 py-8">
+    <div class="flex items-center gap-3 mb-8">
+      <div class="h-11 w-11 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md">
         <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 15.546c.533.479.533 1.284 0 1.764l-4.58 4.12a2.33 2.33 0 01-3.12 0l-4.58-4.12a1.18 1.18 0 010-1.764 1.34 1.18 0 011.88 0l2.7 2.43 2.7-2.43a1.34 1.18 0 011.88 0zM12 2a5 5 0 00-5 5v3H5a2 2 0 00-2 2v8a2 2 0 002 2h14a2 2 0 002-2v-8a2 2 0 00-2-2h-2V7a5 5 0 00-5-5zM9 7a3 3 0 016 0v3H9V7z"/></svg>
       </div>
-      <h1 class="text-2xl font-bold text-slate-800">Gifts & Redemption</h1>
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900">Gifts & Redemption</h1>
+        <p class="text-sm text-slate-500">Scan a player QR to view eligibility</p>
+      </div>
     </div>
 
-    
-
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-      <!-- Scanner Column -->
-      <div class="lg:col-span-4 space-y-6">
-        <div class="relative rounded-2xl bg-black aspect-square overflow-hidden shadow-xl border-4 border-white">
-          <div id="qr-reader" class="w-full h-full"></div>
-          <div id="scanner-overlay" class="scan-overlay"></div>
+      <!-- Left Column — Scanner & Input -->
+      <div class="lg:col-span-5 space-y-6">
+        <!-- QR Scanner -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="px-5 py-4 border-b border-slate-100">
+            <div class="flex items-center gap-2">
+              <svg class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+              <span class="text-sm font-semibold text-slate-700">QR Scanner</span>
+            </div>
+          </div>
+          <div class="p-4 scanner-wrap">
+            <div class="scanner-viewport">
+              <div id="qr-reader"></div>
+              <div class="scan-corner scan-corner-tl"></div>
+              <div class="scan-corner scan-corner-tr"></div>
+              <div class="scan-corner scan-corner-bl"></div>
+              <div class="scan-corner scan-corner-br"></div>
+            </div>
+          </div>
         </div>
 
-        <div class="rounded-2xl border border-slate-200/60 bg-white/80 backdrop-blur-sm p-6 shadow-sm">
-          <label for="playerId" class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Player Identification</label>
-          <input id="playerId" type="text" maxlength="6"
-            class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-lg font-mono text-center uppercase focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 focus:outline-none transition-all shadow-sm"
-            placeholder="AB12C3" autocomplete="off" />
-          <button onclick="lookupPlayer()" class="w-full mt-3 rounded-xl bg-brand-600 py-3 text-sm font-bold text-white shadow-lg hover:bg-brand-700 active:scale-95 transition-all">CHECK ELIGIBILITY</button>
+        <!-- Manual Input -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="px-5 py-4 border-b border-slate-100">
+            <div class="flex items-center gap-2">
+              <svg class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0"/></svg>
+              <span class="text-sm font-semibold text-slate-700">Manual Entry</span>
+            </div>
+          </div>
+          <div class="p-5 space-y-4">
+            <input id="playerId" type="text" maxlength="6"
+              class="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-lg font-mono text-center uppercase focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all placeholder:text-slate-300"
+              placeholder="AB12C3" autocomplete="off" />
+            <button onclick="lookupPlayer()" class="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 active:scale-[0.97] transition-all">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              Check Eligibility
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- Eligibility Column -->
-      <div class="lg:col-span-8 space-y-6">
-        <div id="player-info-card" class="hidden rounded-2xl border border-slate-200/60 bg-white/80 backdrop-blur-sm p-6 shadow-sm">
-          <div class="flex items-center justify-between mb-6">
-            <div class="flex items-center gap-4">
-              <div id="p-avatar" class="h-14 w-14 rounded-2xl bg-brand-500 flex items-center justify-center text-white text-xl font-bold"></div>
-              <div>
-                <h2 id="p-name" class="text-xl font-bold text-slate-800"></h2>
-                <p id="p-id" class="font-mono text-sm text-slate-500"></p>
-              </div>
-            </div>
-            <div class="text-right">
-              <div class="inline-flex flex-col items-end">
-                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Stamp Total</span>
-                <span id="p-stamps" class="text-3xl font-black text-brand-600 leading-none"></span>
-              </div>
+      <!-- Right Column — Player Info & Tiers -->
+      <div class="lg:col-span-7 space-y-6">
+        <!-- Main Player Card -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="px-5 py-4 border-b border-slate-100">
+            <div class="flex items-center gap-2">
+              <svg class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+              <span class="text-sm font-semibold text-slate-700">Player Details</span>
             </div>
           </div>
-          <div class="flex flex-wrap gap-2" id="p-categories"></div>
-        </div>
-
-        <div id="tiers-container" class="space-y-4">
-           <!-- Placeholder -->
-           <div id="welcome-state" class="flex flex-col items-center justify-center py-20 text-center text-slate-400 bg-slate-50/50 rounded-2xl border-2 border-dashed border-slate-200">
-             <svg class="h-16 w-16 mb-4 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h2m-6 0h2m-4 6h10M4 7h16M4 7a2 2 0 012-2h12a2 2 0 012 2M4 7v10a2 2 0 002 2h12a2 2 0 002-2V7"/></svg>
-             <p class="text-sm font-medium">Scan player QR to start redemption process</p>
-           </div>
-        </div>
-
-        <!-- Danger Zone / Round Reset -->
-        <div id="reset-zone" class="hidden rounded-2xl border border-amber-200 bg-amber-50 p-6">
-          <div class="flex items-center justify-between">
-            <div>
-              <h3 class="text-sm font-bold text-amber-900 uppercase tracking-tight">Round Progression</h3>
-              <p class="text-xs text-amber-700 mt-1">Player keeps all stamps but starts a fresh collection cycle.</p>
+          <div class="p-5">
+            <!-- Welcome State (initial) -->
+            <div id="welcome-state" class="flex flex-col items-center justify-center text-center">
+              <div class="h-16 w-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+                <svg class="h-8 w-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 15.546c.533.479.533 1.284 0 1.764l-4.58 4.12a2.33 2.33 0 01-3.12 0l-4.58-4.12a1.18 1.18 0 010-1.764 1.34 1.18 0 011.88 0l2.7 2.43 2.7-2.43a1.34 1.18 0 011.88 0zM12 2a5 5 0 00-5 5v3H5a2 2 0 00-2 2v8a2 2 0 002 2h14a2 2 0 002-2v-8a2 2 0 00-2-2h-2V7a5 5 0 00-5-5z"/></svg>
+              </div>
+              <p class="text-sm font-medium text-slate-400">Scan player QR to start redemption process</p>
+              <p class="text-xs text-slate-300 mt-1">Or enter their Player ID above</p>
             </div>
-            <button onclick="resetRound()" class="rounded-xl bg-amber-600 px-6 py-3 text-xs font-bold text-white shadow hover:bg-amber-700 active:scale-95 transition-all">ADVANCE ROUND</button>
+
+            <!-- Player Info (hidden until lookup) -->
+            <div id="player-info-card" class="hidden">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                  <div id="p-avatar" class="h-14 w-14 rounded-xl bg-blue-600 flex items-center justify-center text-white text-xl font-bold shadow-sm"></div>
+                  <div>
+                    <h2 id="p-name" class="text-lg font-bold text-slate-800"></h2>
+                    <p id="p-id" class="font-mono text-sm text-slate-500"></p>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Stamp Total</span>
+                  <div class="flex items-center gap-1.5 justify-end mt-0.5">
+                    <svg class="h-5 w-5 text-blue-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    <span id="p-stamps" class="text-2xl font-black text-blue-600 leading-none"></span>
+                  </div>
+                </div>
+              </div>
+              <div class="flex flex-wrap gap-2 mt-4 pt-4 border-t border-slate-100" id="p-categories"></div>
+            </div>
+
+            <!-- Tier Cards Container (populated by JS) -->
+            <div id="tiers-container" class="space-y-4"></div>
           </div>
         </div>
 
+        <!-- Round Progression -->
+        <div id="reset-zone" class="hidden bg-white rounded-xl shadow-sm border border-amber-200 overflow-hidden">
+          <div class="px-5 py-4 border-b border-amber-100 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <svg class="h-5 w-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+              <span class="text-sm font-semibold text-slate-700">Round Progression</span>
+            </div>
+          </div>
+          <div class="p-5" id="reset-body">
+            <div class="flex items-center justify-between">
+              <div class="flex items-start gap-3">
+                <div class="h-9 w-9 rounded-lg bg-amber-100 flex items-center justify-center shrink-0 mt-0.5">
+                  <svg class="h-5 w-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                </div>
+                <div>
+                  <h3 class="text-sm font-bold text-slate-800 uppercase tracking-tight">Round Progression</h3>
+                  <p id="reset-desc" class="text-xs text-slate-500 mt-0.5">Collect all 12 stamps to unlock round advancement.</p>
+                </div>
+              </div>
+              <button id="reset-btn" onclick="resetRound()" disabled
+                class="rounded-xl bg-slate-300 px-5 py-2.5 text-xs font-bold text-white cursor-not-allowed transition-all shrink-0">
+                ADVANCE ROUND
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Message Display -->
         <div id="redeem-msg" class="hidden rounded-xl p-4 text-sm font-bold border text-center"></div>
       </div>
     </div>
@@ -136,17 +197,22 @@
       document.getElementById('p-avatar').textContent = data.name.charAt(data.name.length-1);
 
       const canAdvance = data.stampTotal >= 12;
-      const resetZone = document.getElementById('reset-zone');
-      resetZone.innerHTML = `
+      const resetBody = document.getElementById('reset-body');
+      resetBody.innerHTML = `
         <div class="flex items-center justify-between">
-          <div>
-            <h3 class="text-sm font-bold ${canAdvance ? 'text-amber-900' : 'text-slate-500'} uppercase tracking-tight">Round Progression</h3>
-            <p class="text-xs ${canAdvance ? 'text-amber-700' : 'text-slate-400'} mt-1">
-              ${canAdvance ? 'Player keeps all stamps but starts a fresh collection cycle.' : 'Collect all 12 stamps to unlock round advancement.'}
-            </p>
+          <div class="flex items-start gap-3">
+            <div class="h-9 w-9 rounded-lg ${canAdvance ? 'bg-amber-100' : 'bg-slate-100'} flex items-center justify-center shrink-0 mt-0.5">
+              <svg class="h-5 w-5 ${canAdvance ? 'text-amber-600' : 'text-slate-400'}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold ${canAdvance ? 'text-slate-800' : 'text-slate-500'} uppercase tracking-tight">Round Progression</h3>
+              <p class="text-xs ${canAdvance ? 'text-slate-600' : 'text-slate-400'} mt-0.5">
+                ${canAdvance ? 'Player keeps all stamps but starts a fresh collection cycle.' : 'Collect all 12 stamps to unlock round advancement.'}
+              </p>
+            </div>
           </div>
-          <button onclick="resetRound()" ${canAdvance ? '' : 'disabled'} 
-            class="rounded-xl ${canAdvance ? 'bg-amber-600 hover:bg-amber-700' : 'bg-slate-300 cursor-not-allowed'} px-6 py-3 text-xs font-bold text-white shadow active:scale-95 transition-all">
+          <button onclick="resetRound()" ${canAdvance ? '' : 'disabled'}
+            class="rounded-xl ${canAdvance ? 'bg-amber-600 hover:bg-amber-700' : 'bg-slate-300 cursor-not-allowed'} px-5 py-2.5 text-xs font-bold text-white shadow-sm active:scale-[0.97] transition-all shrink-0">
             ADVANCE ROUND
           </button>
         </div>
@@ -154,53 +220,70 @@
 
       const catEl = document.getElementById('p-categories');
       if (catEl) {
-      catEl.innerHTML = (data.categoriesCollected || []).map(c =>
-        `<span class="px-3 py-1 rounded-full bg-white border border-brand-200 text-[10px] font-bold text-brand-700 uppercase">Category ${c}</span>`
-      ).join('') || '<span class="text-xs text-slate-400 italic">No categories collected this round</span>';
+        catEl.innerHTML = (data.categoriesCollected || []).map(c =>
+          `<span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-50 text-xs font-semibold text-blue-700 border border-blue-100">
+            <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"/></svg>
+            Category ${c}
+          </span>`
+        ).join('') || '<span class="text-xs text-slate-400 italic">No categories collected this round</span>';
       }
 
       const tiersEl = document.getElementById('tiers-container');
       if (tiersEl) {
-      tiersEl.innerHTML = data.tiers.map(t => {
-        const status = t.alreadyRedeemed ? 'REDEEMED' : t.eligible ? 'AVAILABLE' : 'LOCKED';
-        const colorClass = t.alreadyRedeemed ? 'bg-slate-100 border-slate-200 grayscale' : t.eligible ? 'bg-white border-emerald-300 ring-2 ring-emerald-500/10' : 'bg-white border-slate-200 opacity-60';
-        
-        const giftsHtml = t.eligible ? (t.gifts || []).map(g => {
-          const remaining = g.remaining || 0;
-          const isOutOfStock = remaining === 0;
-          const stockColor = isOutOfStock ? 'text-slate-300' : 'text-white';
-          const btnClass = isOutOfStock
-            ? 'flex-1 rounded-xl bg-slate-200 py-3 text-xs font-bold text-slate-400 cursor-not-allowed'
-            : 'flex-1 rounded-xl bg-brand-600 py-3 text-xs font-bold text-white shadow-md hover:bg-brand-700 active:scale-95 transition-all';
-          const stockLabel = isOutOfStock ? 'OUT OF STOCK' : `(${remaining} left)`;
-          return `<button onclick="${isOutOfStock ? '' : `claimGift('${t.key}','${g.name.replace(/'/g, "\\'")}',${remaining})`}"
-            class="${btnClass}" ${isOutOfStock ? 'disabled' : ''}>
-            ${isOutOfStock ? '✕ ' : '✓ '} ${g.name.toUpperCase()} <span class="${stockColor}">${stockLabel}</span>
-          </button>`;
-        }).join('') : '';
+        tiersEl.innerHTML = data.tiers.map(t => {
+          const status = t.alreadyRedeemed ? 'REDEEMED' : t.eligible ? 'AVAILABLE' : 'LOCKED';
+          const colorClass = t.alreadyRedeemed ? 'bg-white border-slate-200 opacity-70' : t.eligible ? 'bg-white border-emerald-300 ring-1 ring-emerald-500/20' : 'bg-white border-slate-200 opacity-60';
 
-        return `
-          <div class="rounded-2xl border-2 p-6 transition-all ${colorClass}">
-            <div class="flex items-center justify-between mb-4">
-              <div>
-                <h3 class="font-black text-slate-800 text-lg uppercase tracking-tight">${t.name}</h3>
-                <p class="text-xs text-slate-500">${t.requiredStamps} Stamps &middot; ${t.requireAllCategories ? 'All 3 Categories' : '≥'+t.minCategories+' Categories'}</p>
+          const giftsHtml = t.eligible ? (t.gifts || []).map(g => {
+            const remaining = g.remaining || 0;
+            const isOutOfStock = remaining === 0;
+            const btnClass = isOutOfStock
+              ? 'flex-1 rounded-xl bg-slate-100 py-3 text-xs font-bold text-slate-400 cursor-not-allowed border border-slate-200'
+              : 'flex-1 rounded-xl bg-blue-600 py-3 text-xs font-bold text-white shadow-sm hover:bg-blue-700 active:scale-[0.97] transition-all';
+            const stockLabel = isOutOfStock ? 'OUT OF STOCK' : `${remaining} left`;
+            return `<button onclick="${isOutOfStock ? '' : `claimGift('${t.key}','${g.name.replace(/'/g, "\\'")}',${remaining})`}"
+              class="${btnClass}" ${isOutOfStock ? 'disabled' : ''}>
+              ${isOutOfStock
+                ? '<svg class="h-3.5 w-3.5 inline-block mr-1 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>'
+                : '<svg class="h-3.5 w-3.5 inline-block mr-1 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>'}
+              <span class="inline-block">${g.name.toUpperCase()}</span>
+              <span class="${isOutOfStock ? 'text-slate-300' : 'text-blue-200'} block text-[10px] leading-none mt-0.5">${stockLabel}</span>
+            </button>`;
+          }).join('') : '';
+
+          return `
+            <div class="rounded-xl border-2 p-5 transition-all ${colorClass}">
+              <div class="flex items-start justify-between mb-4">
+                <div class="flex-1">
+                  <div class="flex items-center gap-2">
+                    <h3 class="font-bold text-slate-800 text-base uppercase tracking-tight">${t.name}</h3>
+                    <span class="px-2.5 py-0.5 rounded-full font-bold text-[10px] tracking-wider leading-none ${status === 'AVAILABLE' ? 'bg-emerald-100 text-emerald-700' : status === 'REDEEMED' ? 'bg-slate-200 text-slate-500' : 'bg-slate-100 text-slate-400'}">${status}</span>
+                  </div>
+                  <div class="flex items-center gap-1.5 mt-1">
+                    <svg class="h-3.5 w-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    <p class="text-xs text-slate-500">${t.requiredStamps} Stamps required</p>
+                    <span class="text-slate-300">·</span>
+                    <svg class="h-3.5 w-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                    <p class="text-xs text-slate-500">${t.requireAllCategories ? 'All 3 Categories' : '≥ '+t.minCategories+' Categories'}</p>
+                  </div>
+                </div>
+                ${t.eligible && t.gifts && t.gifts.length > 0 ? `<div class="text-right shrink-0 ml-4">
+                  <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-50 text-[10px] font-bold text-blue-600">
+                    <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 15.546c.533.479.533 1.284 0 1.764l-4.58 4.12a2.33 2.33 0 01-3.12 0l-4.58-4.12a1.18 1.18 0 010-1.764 1.34 1.18 0 011.88 0l2.7 2.43 2.7-2.43a1.34 1.18 0 011.88 0zM12 2a5 5 0 00-5 5v3H5a2 2 0 00-2 2v8a2 2 0 002 2h14a2 2 0 002-2v-8a2 2 0 00-2-2h-2V7a5 5 0 00-5-5z"/></svg>
+                    ${t.gifts.length} GIFT${t.gifts.length>1?'S':''}
+                  </span>
+                </div>` : ''}
               </div>
-              <div class="text-right">
-                ${t.eligible && t.gifts && t.gifts.length > 0 ? `<p class="text-[10px] font-bold text-slate-400">${t.gifts.length} GIFT${t.gifts.length>1?'S':''} AVAILABLE</p>` : ''}
-                <span class="mt-1 block px-3 py-1 rounded-lg font-black text-[10px] tracking-widest ${t.eligible ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'}">${status}</span>
-              </div>
+              <div class="flex gap-2">${giftsHtml || (t.alreadyRedeemed ? '<p class="text-sm font-medium text-slate-400 italic text-center w-full flex items-center justify-center gap-2"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"/></svg>Gift already claimed for this round</p>' : '')}</div>
             </div>
-            <div class="flex gap-2">${giftsHtml || (t.alreadyRedeemed ? '<p class="text-sm font-bold text-slate-400 italic text-center w-full">Gift already claimed for this round</p>' : '')}</div>
-          </div>
-        `;
-      }).join('');
-    }
+          `;
+        }).join('');
+      }
     }
 
     async function claimGift(tierKey, giftName, remainingStock) {
       if (!currentPlayer) return;
-      
+
       const stockInfo = remainingStock !== undefined ? ` (${remainingStock} currently in stock)` : '';
       const confirmed = await ConfirmModal.show({
         title: 'Confirm Redemption',
@@ -252,9 +335,21 @@
     function showMsg(msg, type) {
       const el = document.getElementById('redeem-msg');
       el.classList.remove('hidden');
-      el.className = `mt-6 rounded-xl p-5 text-sm font-black border text-center uppercase tracking-wide shadow-lg animate-bounce ${type === 'error' ? 'bg-red-600 text-white border-red-700' : 'bg-emerald-600 text-white border-emerald-700'}`;
+      el.className = `rounded-xl p-4 text-sm font-bold border text-center ${type === 'error' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`;
       el.textContent = msg;
       setTimeout(() => el.classList.add('hidden'), 5000);
+    }
+
+    function scanSuccessFlash() {
+      const vp = document.querySelector('.scanner-viewport');
+      if (!vp) return;
+      const flash = document.createElement('div');
+      flash.className = 'scan-success-flash';
+      flash.innerHTML = '<svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>';
+      vp.appendChild(flash);
+      setTimeout(() => flash.remove(), 900);
+      document.querySelectorAll('.scan-corner').forEach(el => el.style.setProperty('--scan-clr', '#10b981'));
+      setTimeout(() => document.querySelectorAll('.scan-corner').forEach(el => el.style.setProperty('--scan-clr', '#3b82f6')), 1500);
     }
 
     function initScanner() {
@@ -263,12 +358,11 @@
         const now = Date.now();
         if (now - lastScanTime < 2000) return;
         lastScanTime = now;
+        scanSuccessFlash();
         let id = text.trim();
         const match = id.match(/\/player\/([A-Z0-9]{6})/i);
         if (match) id = match[1];
         document.getElementById('playerId').value = id.toUpperCase();
-        document.getElementById('scanner-overlay').style.borderColor = '#10b981';
-        setTimeout(() => { document.getElementById('scanner-overlay').style.borderColor = '#3b82f6'; }, 1000);
         lookupPlayer();
       }).catch(err => { });
     }
