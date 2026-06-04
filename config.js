@@ -1,9 +1,8 @@
 module.exports = {
-
     CATEGORIES: {
         A: { key: "A", name: "Languages" },
         B: { key: "B", name: "Postcard Writing" },
-        C: { key: "C", name: "Lounge Visit" },
+        // C: { key: "C", name: "Lounge Visit" },
     },
     EVENT_DETAILS: {
         Event: "Other Languages Experience Day: Learn. Showcase. Connect. (學展同樂：其他語言體驗日)",
@@ -27,46 +26,41 @@ module.exports = {
             category: "B",
             stampValue: 1,
         },
-        {
-            key: "lounge-visit",
-            name: "Lounge Visit",
-            category: "C",
-            stampValue: 3,
-        },
+        // {
+        //     key: "lounge-visit",
+        //     name: "Lounge Visit",
+        //     category: "C",
+        //     stampValue: 3,
+        // },
     ],
 
     REDEMPTION_TIERS: [
         {
             key: "tier1",
             name: "Tier 1",
-            requiredStamps: 5,
+            requiredStamps: 3,
             minCategories: 1,
             requireAllCategories: false,
-            gifts: [
-                { name: "Paper clips", qty: 100 },
-                { name: "Paper stand", qty: 100 },
-                { name: "Pen", qty: 100 },
-            ],
+            gifts: [{ name: "Pen", qty: 100 }],
         },
         {
             key: "tier2",
             name: "Tier 2",
-            requiredStamps: 8,
-            minCategories: 2,
+            requiredStamps: 6,
+            minCategories: 1,
             requireAllCategories: false,
             gifts: [
-                { name: "Leaf corner", qty: 100 },
                 { name: "Bookmark", qty: 100 },
-                { name: "Keyboard clicker key chain", qty: 100 },
+                { name: "Keyboard Clicker", qty: 100 },
             ],
         },
         {
             key: "tier3",
             name: "Tier 3",
-            requiredStamps: 12,
-            minCategories: 3,
-            requireAllCategories: true,
-            gifts: [{ name: "Recorder toy", qty: 100 }],
+            requiredStamps: 9,
+            minCategories: 1,
+            requireAllCategories: false,
+            gifts: [{ name: "Coin", qty: 100 }],
         },
     ],
 
@@ -90,10 +84,10 @@ module.exports = {
     MAX_ROUNDS: 5,
 
     TOTAL_BOOTHS: 10,
-    
+
     SESSION_TIMEOUT_MS: 8 * 60 * 60 * 1000,
-    
+
     DB_POOL_MAX: 20,
-    
+
     LOW_STOCK_THRESHOLD: 10,
 };

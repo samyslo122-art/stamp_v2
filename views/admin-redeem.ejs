@@ -136,7 +136,7 @@
                 </div>
                 <div>
                   <h3 class="text-sm font-bold text-slate-800 uppercase tracking-tight">Round Progression</h3>
-                  <p id="reset-desc" class="text-xs text-slate-500 mt-0.5">Collect all 12 stamps to unlock round advancement.</p>
+                  <p id="reset-desc" class="text-xs text-slate-500 mt-0.5">Collect all 9 stamps to unlock round advancement.</p>
                 </div>
               </div>
               <button id="reset-btn" onclick="resetRound()" disabled
@@ -196,7 +196,7 @@
       document.getElementById('p-stamps').textContent = data.stampTotal;
       document.getElementById('p-avatar').textContent = data.name.charAt(data.name.length-1);
 
-      const canAdvance = data.stampTotal >= 12;
+      const canAdvance = data.stampTotal >= 9;
       const resetBody = document.getElementById('reset-body');
       resetBody.innerHTML = `
         <div class="flex items-center justify-between">
@@ -217,16 +217,6 @@
           </button>
         </div>
       `;
-
-      const catEl = document.getElementById('p-categories');
-      if (catEl) {
-        catEl.innerHTML = (data.categoriesCollected || []).map(c =>
-          `<span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-50 text-xs font-semibold text-blue-700 border border-blue-100">
-            <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"/></svg>
-            Category ${c}
-          </span>`
-        ).join('') || '<span class="text-xs text-slate-400 italic">No categories collected this round</span>';
-      }
 
       const tiersEl = document.getElementById('tiers-container');
       if (tiersEl) {
@@ -263,8 +253,6 @@
                     <svg class="h-3.5 w-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                     <p class="text-xs text-slate-500">${t.requiredStamps} Stamps required</p>
                     <span class="text-slate-300">·</span>
-                    <svg class="h-3.5 w-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
-                    <p class="text-xs text-slate-500">${t.requireAllCategories ? 'All 3 Categories' : '≥ '+t.minCategories+' Categories'}</p>
                   </div>
                 </div>
                 ${t.eligible && t.gifts && t.gifts.length > 0 ? `<div class="text-right shrink-0 ml-4">
