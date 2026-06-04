@@ -19,7 +19,7 @@
   <%- include('partials/modal') %>
 
   <!-- Toast Container -->
-  <div id="toast-wrap" class="fixed top-4 right-4 z-50 flex flex-col items-end max-w-sm pointer-events-none"></div>
+  <div id="toast-wrap"></div>
 
   <main class="mx-auto max-w-6xl px-4 py-8">
     <div class="flex items-center gap-3 mb-8">
@@ -148,7 +148,7 @@
         </div>
 
         <!-- Message Display -->
-        <div id="redeem-msg" class="hidden rounded-xl p-4 text-sm font-bold border text-center"></div>
+        <div id="redeem-msg" class="hidden inline-msg border-slate-200" role="alert"></div>
       </div>
     </div>
   </main>
@@ -334,9 +334,9 @@
 
     function showMsg(msg, type) {
       const el = document.getElementById('redeem-msg');
-      el.classList.remove('hidden');
-      el.className = `rounded-xl p-4 text-sm font-bold border text-center ${type === 'error' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`;
+      el.className = `inline-msg ${type === 'error' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`;
       el.textContent = msg;
+      el.classList.remove('hidden');
       setTimeout(() => el.classList.add('hidden'), 5000);
     }
 

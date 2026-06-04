@@ -1,3 +1,7 @@
 1. the player passport page, the lounge visit (collected) stamp has styling issue. the box wrapping the tick and the box wrapping the text bg color should be transparant rather than white color
 2. you are professional and top tier ux and ui designer from google. improve the ui and ux of the register page and all other pages, give a full plan as a professional ui/ux designer. you need to do a complete redesign of all ui and ux. remeber this is a governemnt project, which need to be reliable, clean, high-quality, innovative , user-friendly, light color bg theme. in the admin page, always ask admin to confirm action. the register page and passport page should be mobile-first design and look like an actual mobile app to provide immersive ux. dont change any of the backend function to prevent making new bug and error.
-dont add wording like : "gov project/secure xxx". now only focus on the passport page and register page
+dont add wording like : "gov project/secure xxx". now only focus on the register page
+
+
+29/5
+updated the msg box and select box. need check. not yet check

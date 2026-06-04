@@ -11,12 +11,20 @@ const AppUI = {
       info: 'bg-blue-50 text-blue-800 border-blue-200',
     };
     const el = document.createElement('div');
-    el.className = `rounded-lg border p-3 text-sm shadow-sm mb-2 transition-all duration-300 ${colors[type] || colors.info}`;
+    el.className = `rounded-xl border-2 p-3.5 text-sm font-semibold shadow-lg mb-2 transition-all duration-300 ${colors[type] || colors.info}`;
+    el.style.minWidth = '280px';
+    el.style.textAlign = 'center';
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(-8px)';
     el.textContent = msg;
     wrap.appendChild(el);
+    requestAnimationFrame(() => {
+      el.style.opacity = '1';
+      el.style.transform = 'translateY(0)';
+    });
     setTimeout(() => {
       el.style.opacity = '0';
-      el.style.transform = 'translateX(20px)';
+      el.style.transform = 'translateY(-12px) scale(0.96)';
       setTimeout(() => el.remove(), 300);
     }, duration);
   },
