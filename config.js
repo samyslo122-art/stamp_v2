@@ -65,10 +65,13 @@ module.exports = {
     ],
 
     GROUPS: [
-        { group_code: "BKRF75GY", quota: 40 },
-        { group_code: "UHM6KVWD", quota: 30 },
-        { group_code: "M5KTAHB7", quota: 10 },
-        { group_code: "PMMP7E42", quota: 40 },
+        { group_code: "6V8GL2P4", quota: 18 },
+        { group_code: "E9ZBRATM", quota: 10 },
+        { group_code: "Q78VQMQP", quota: 2 },
+        { group_code: "XHSR1EF8", quota: 20 },
+        { group_code: "97G65AQJ", quota: 5 },
+        { group_code: "9DRYH7ON", quota: 100 }, //guest
+        { group_code: "PS39H0DU", quota: 100 }, //Amb
     ],
 
     RATE_LIMITS: {
