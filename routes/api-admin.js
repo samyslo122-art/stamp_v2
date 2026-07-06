@@ -437,9 +437,9 @@ router.post("/api/admin/rounds/reset", requireAdmin, async (req, res) => {
             [player.id, player.current_round],
         );
         const totalPoints = stampsResult.rows[0].total || 0;
-        if (totalPoints < 9) {
+        if (totalPoints < 6) {
             return res.status(400).json({
-                error: `Player only has ${totalPoints}/12 points. Must collect all stamps to advance.`,
+                error: `Player only has ${totalPoints}/6 points. Must collect all stamps to advance.`,
             });
         }
 
