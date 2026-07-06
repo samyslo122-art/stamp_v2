@@ -38,7 +38,7 @@ module.exports = {
         {
             key: "tier1",
             name: "Tier 1",
-            requiredStamps: 3,
+            requiredStamps: 2,
             minCategories: 1,
             requireAllCategories: false,
             gifts: [{ name: "Pen", qty: 100 }],
@@ -46,7 +46,7 @@ module.exports = {
         {
             key: "tier2",
             name: "Tier 2",
-            requiredStamps: 6,
+            requiredStamps: 4,
             minCategories: 1,
             requireAllCategories: false,
             gifts: [
@@ -57,7 +57,7 @@ module.exports = {
         {
             key: "tier3",
             name: "Tier 3",
-            requiredStamps: 9,
+            requiredStamps: 6,
             minCategories: 1,
             requireAllCategories: false,
             gifts: [{ name: "Coin", qty: 100 }],
@@ -71,7 +71,20 @@ module.exports = {
         { group_code: "XHSR1EF8", quota: 20 },
         { group_code: "97G65AQJ", quota: 5 },
         { group_code: "9DRYH7ON", quota: 100 }, //guest
-        { group_code: "PS39H0DU", quota: 100 }, //Amb
+        { group_code: "LLR4LM84", quota: 100 }, //Amb Sch
+        { group_code: "GC307EER", quota: 100 }, //Amb Sch
+        { group_code: "TIWYVYUN", quota: 100 }, //Amb Sch
+        { group_code: "5BUJ2NMR", quota: 100 }, //Amb Sch
+        { group_code: "GX756FCB", quota: 100 }, //Amb Sch
+        { group_code: "VIMF99F8", quota: 100 }, //Amb Sch
+        { group_code: "ZQYQYX45", quota: 100 }, //Amb Sch
+        { group_code: "V595O25O", quota: 100 }, //Amb Sch
+        { group_code: "7C8NEBQR", quota: 100 }, //Amb Sch
+        { group_code: "SVFCRNQH", quota: 100 }, //Amb Sch
+        { group_code: "VPPMGUDA", quota: 100 }, //Amb Sch
+        { group_code: "ERSDHU6H", quota: 100 }, //Amb Sch
+        { group_code: "FRYB263R", quota: 100 }, //Amb Sch
+        { group_code: "GGOL7ZTJ", quota: 100 }, //Amb Sch
     ],
 
     RATE_LIMITS: {

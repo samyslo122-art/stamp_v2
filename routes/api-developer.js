@@ -473,6 +473,19 @@ router.delete('/api/developer/groups', requireDeveloper, async (req, res) => {
   }
 });
 
+// Group QR
+router.get('/api/developer/groups/qr', requireDeveloper, async (req, res) => {
+  try {
+    const QRCode = require('qrcode');
+    const { code } = req.query;
+    if (!code) return res.status(400).json({ error: 'code required' });
+    const qr = await QRCode.toDataURL(code);
+    res.json({ qr, code });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Gifts CRUD
 router.get('/api/developer/gifts', requireDeveloper, async (req, res) => {
   try {
