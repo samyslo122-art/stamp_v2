@@ -70,6 +70,7 @@ module.exports = {
         { group_code: "Q78VQMQP", quota: 2 },
         { group_code: "XHSR1EF8", quota: 20 },
         { group_code: "97G65AQJ", quota: 5 },
+        { group_code: "HX5HSNHD", quota: 100 },
         { group_code: "9DRYH7ON", quota: 100 }, //guest
         { group_code: "LLR4LM84", quota: 100 }, //Amb Sch
         { group_code: "GC307EER", quota: 100 }, //Amb Sch

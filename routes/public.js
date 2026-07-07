@@ -18,6 +18,22 @@ router.get('/register', (req, res) => {
   });
 });
 
+// GET /self-reg — Public page showing big QR code for self-registration URL
+router.get('/self-reg', async (req, res, next) => {
+  try {
+    const QRCode = require('qrcode');
+    const regUrl = `${req.protocol}://${req.get('host')}/register`;
+    const qrDataUrl = await QRCode.toDataURL(regUrl, { width: 500, margin: 2 });
+    res.render('self-reg', {
+      eventDetails: req.appSettings.EVENT_DETAILS,
+      qrDataUrl,
+      regUrl,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /player/:uniqueId — Player Portal
 router.get('/player/:uniqueId', async (req, res, next) => {
   try {
