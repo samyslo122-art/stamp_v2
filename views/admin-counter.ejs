@@ -61,9 +61,9 @@
           <div class="p-5 space-y-4">
             <input id="mainQuery" type="text"
               class="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-lg font-mono text-center uppercase tracking-widest focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all placeholder:text-slate-300"
-              placeholder="TYPE CODE OR NAME" autocomplete="off" />
+              placeholder="PLAYER ID OR NAME" autocomplete="off" />
             <div class="grid grid-cols-2 gap-3">
-              <button onclick="registerPlayer()" class="rounded-lg bg-emerald-600 py-3 text-sm font-bold text-white shadow-sm hover:bg-emerald-700 active:scale-[0.97] transition-all">New Player</button>
+              <button onclick="activatePlayer()" class="rounded-lg bg-emerald-600 py-3 text-sm font-bold text-white shadow-sm hover:bg-emerald-700 active:scale-[0.97] transition-all">Activate Player</button>
               <button onclick="searchPlayers()" class="rounded-lg bg-blue-600 py-3 text-sm font-bold text-white shadow-sm hover:bg-blue-700 active:scale-[0.97] transition-all">Search</button>
             </div>
           </div>
@@ -104,23 +104,24 @@
       if (e.key === 'Enter') searchPlayers();
     });
 
-    async function registerPlayer() {
+    async function activatePlayer() {
       const code = mainInput.value.trim().toUpperCase();
       if (!code) return;
       try {
-        const res = await fetch('/api/admin/players/create', {
+        const res = await fetch('/api/admin/players/activate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken },
-          body: JSON.stringify({ groupCode: code })
+          body: JSON.stringify({ playerId: code })
         });
         const data = await res.json();
         const msgEl = document.getElementById('reg-msg');
+        msgEl.classList.remove('hidden');
         if (!res.ok) {
-          msgEl.className = 'inline-msg bg-red-50 text-red-700 border-red-200';
-          msgEl.textContent = data.error || 'Failed to create player';
+          msgEl.className = 'inline-msg bg-red-50 text-red-700 border-red-200 mt-4';
+          msgEl.textContent = data.error || 'Failed to activate player';
         } else {
-          msgEl.className = 'inline-msg bg-emerald-50 text-emerald-700 border-emerald-200';
-          msgEl.textContent = `Successfully Created ${data.name}`;
+          msgEl.className = 'inline-msg bg-emerald-50 text-emerald-700 border-emerald-200 mt-4';
+          msgEl.textContent = data.newlyActivated ? `Successfully Activated ${data.name}` : `${data.name} is already active`;
           searchPlayers(data.uniqueId);
         }
       } catch(e) { }
@@ -175,7 +176,7 @@
         lastScanTime = now;
 
         let id = text.trim();
-        const match = id.match(/\/player\/([A-Z0-9]{6})/i);
+        const match = id.match(/\/player\/([A-Z0-9]+)/i);
         if (match) id = match[1];
 
         mainInput.value = id.toUpperCase();

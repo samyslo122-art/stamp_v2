@@ -139,7 +139,7 @@
                 data-booth-value="<%= booth.stampValue %>" data-category="<%= category.categoryKey %>"
                 class="stamp-card rounded-xl p-4 <%= booth.collected ? 'collected cat-' + category.categoryKey.toLowerCase() : 'pending' %>">
                 <div class="flex flex-col items-center text-center gap-2">
-                  <div class="w-10 h-10 rounded-full flex items-center justify-center <%= booth.collected ? 'bg-white/25' : 'bg-surface-100' %>">
+                  <div class="w-10 h-10 rounded-full flex items-center justify-center <%= booth.collected ? 'bg-white/10' : 'bg-surface-100' %>">
                     <% if (booth.collected) { %>
                       <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                     <% } else { %>
@@ -150,7 +150,7 @@
                     <p class="text-sm font-medium <%= booth.collected ? 'text-white' : 'text-text-primary' %>"><%= booth.name %></p>
                     <p class="text-xs <%= booth.collected ? 'text-white/80' : 'text-text-muted' %>"><%= booth.stampValue %> pt</p>
                   </div>
-                  <span class="stamp-badge inline-flex items-center px-2 py-1 rounded-full text-xs font-medium <%= booth.collected ? 'bg-white/20 text-white' : 'bg-surface-100 text-text-muted' %>">
+                  <span class="stamp-badge inline-flex items-center px-2 py-1 rounded-full text-xs font-medium <%= booth.collected ? 'bg-white/10 text-white border border-white/20' : 'bg-surface-100 text-text-muted' %>">
                     <% if (booth.collected) { %>
                       Collected
                     <% } else { %>

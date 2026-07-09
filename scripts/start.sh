@@ -53,8 +53,11 @@ echo "=================================================="
 echo "School Event Passport is now running!"
 echo "Retrieving Cloudflare Tunnel URL..."
 echo "=================================================="
-# Try multiple ways to get the URL from logs
-URL=$(pm2 logs cloudflare-tunnel --lines 100 --nostream | grep -o 'https://[^[:space:]]*\.trycloudflare\.com' | tail -1)
+# Try multiple ways to get the URL from logs or log files
+URL=$(pm2 logs cloudflare-tunnel --lines 100 --nostream 2>/dev/null | grep -om1 'https://[^[:space:]]*\.trycloudflare\.com')
+if [ -z "$URL" ]; then
+  URL=$(grep -om1 'https://[^[:space:]]*\.trycloudflare\.com' logs/tunnel-out.log 2>/dev/null)
+fi
 
 if [ -z "$URL" ]; then
     echo "Could not extract the URL automatically. Check manually with: pm2 logs cloudflare-tunnel"

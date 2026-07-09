@@ -12,72 +12,45 @@ const {
   checkRedemptionEligibility,
 } = require('../helpers/config-helpers');
 
-// POST /api/players/register — Create player from group code
+// POST /api/players/register — Player self-activation / login
 router.post('/api/players/register', async (req, res) => {
   const client = await db.getClient();
   try {
-    const { groupCode } = req.body;
-    if (!groupCode) return res.status(400).json({ error: 'Group code required' });
+    let { playerId } = req.body;
+    if (!playerId) return res.status(400).json({ error: 'Player ID required' });
+    
+    // Auto zero-pad if it's purely numeric and under 3 chars
+    if (/^\d{1,2}$/.test(playerId)) {
+      playerId = playerId.padStart(3, '0');
+    }
 
     await client.query('BEGIN');
 
-    // Look up group with lock
-    const groupResult = await client.query(
-      'SELECT * FROM groups WHERE group_code = $1 FOR UPDATE',
-      [groupCode.toUpperCase()]
+    // Look up player
+    const playerResult = await client.query(
+      'SELECT * FROM players WHERE unique_id = $1 FOR UPDATE',
+      [playerId]
     );
-    if (groupResult.rows.length === 0) {
+    if (playerResult.rows.length === 0) {
       await client.query('ROLLBACK');
-      return res.status(400).json({ error: 'Invalid group code' });
+      return res.status(400).json({ error: 'Invalid Player ID' });
     }
-    const group = groupResult.rows[0];
+    const player = playerResult.rows[0];
 
-    if (!group.checked_in) {
-      await client.query('ROLLBACK');
-      return res.status(400).json({ error: 'Registration not open yet' });
+    // If not active, activate them
+    if (!player.is_active) {
+      await client.query(
+        'UPDATE players SET is_active = true WHERE id = $1',
+        [player.id]
+      );
     }
-
-    // Check quota atomically
-    const countResult = await client.query(
-      'SELECT COUNT(*)::int AS cnt FROM players WHERE group_id = $1',
-      [group.id]
-    );
-    if (countResult.rows[0].cnt >= group.quota) {
-      await client.query('ROLLBACK');
-      return res.status(400).json({ error: 'This group is full' });
-    }
-
-    // Get next player number from sequence
-    const seqResult = await client.query("SELECT nextval('player_number_seq')::int AS num");
-    const playerNumber = seqResult.rows[0].num;
-    const playerName = formatPlayerName(playerNumber);
-
-    // Generate unique ID (retry if collision)
-    let uniqueId;
-    let attempts = 0;
-    while (attempts < 20) {
-      uniqueId = generateUniqueId();
-      const existing = await client.query('SELECT id FROM players WHERE unique_id = $1', [uniqueId]);
-      if (existing.rows.length === 0) break;
-      attempts++;
-    }
-    if (attempts >= 20) {
-      await client.query('ROLLBACK');
-      return res.status(500).json({ error: 'Failed to generate unique ID' });
-    }
-
-    // Create player
-    await client.query(
-      'INSERT INTO players (player_number, unique_id, name, group_id) VALUES ($1, $2, $3, $4)',
-      [playerNumber, uniqueId, playerName, group.id]
-    );
 
     await client.query('COMMIT');
 
-    res.json({ uniqueId, name: playerName, playerNumber });
+    res.json({ uniqueId: player.unique_id, name: player.name, playerNumber: player.player_number });
   } catch (err) {
     await client.query('ROLLBACK');
-    console.error('Registration error:', err);
+    console.error('Registration/Login error:', err);
     res.status(500).json({ error: 'Registration failed' });
   } finally {
     client.release();
@@ -117,7 +90,9 @@ router.get('/api/groups/validate/:qrCode', async (req, res) => {
 // GET /api/player/:uniqueId — Player data + round summary
 router.get('/api/player/:uniqueId', async (req, res) => {
   try {
-    const uniqueId = req.params.uniqueId.toUpperCase();
+    let uniqueId = req.params.uniqueId.toUpperCase();
+    if (/^\d{1,2}$/.test(uniqueId)) uniqueId = uniqueId.padStart(3, '0');
+    
     const playerResult = await db.query(
       'SELECT * FROM players WHERE unique_id = $1',
       [uniqueId]

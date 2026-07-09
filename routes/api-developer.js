@@ -205,7 +205,7 @@ router.put('/api/developer/settings', requireDeveloper, async (req, res) => {
 router.get('/api/developer/players', requireDeveloper, async (req, res) => {
   try {
     const result = await db.query(
-      `SELECT p.id, p.player_number, p.unique_id, p.name, p.current_round, g.group_code, p.created_at, p.group_id
+      `SELECT p.id, p.player_number, p.unique_id, p.name, p.current_round, g.group_code, p.created_at, p.group_id, p.is_active
        FROM players p JOIN groups g ON g.id = p.group_id ORDER BY p.player_number`
     );
     res.json({ rows: result.rows });
@@ -216,15 +216,16 @@ router.get('/api/developer/players', requireDeveloper, async (req, res) => {
 
 router.post('/api/developer/players', requireDeveloper, async (req, res) => {
   try {
-    let { unique_id, name, group_id, current_round, player_number } = req.body;
+    let { unique_id, name, group_id, current_round, player_number, is_active } = req.body;
     if (!unique_id) unique_id = generateUniqueId();
     if (!player_number) {
         const seq = await db.query("SELECT nextval('player_number_seq')::int as num");
         player_number = seq.rows[0].num;
     }
+    const act = typeof is_active === 'boolean' ? is_active : false;
     await db.query(
-      'INSERT INTO players (unique_id, name, group_id, current_round, player_number) VALUES ($1, $2, $3, $4, $5)',
-      [unique_id.toUpperCase(), name, group_id, current_round || 1, player_number]
+      'INSERT INTO players (unique_id, name, group_id, current_round, player_number, is_active) VALUES ($1, $2, $3, $4, $5, $6)',
+      [unique_id.toUpperCase(), name, group_id, current_round || 1, player_number, act]
     );
     res.json({ success: true });
   } catch (err) {
@@ -234,7 +235,7 @@ router.post('/api/developer/players', requireDeveloper, async (req, res) => {
 
 router.put('/api/developer/players', requireDeveloper, async (req, res) => {
   try {
-    const { id, unique_id, name, group_id, current_round, player_number } = req.body;
+    const { id, unique_id, name, group_id, current_round, player_number, is_active } = req.body;
     const pid = parseInt(id);
     if (isNaN(pid)) return res.status(400).json({ error: 'Invalid ID' });
 
@@ -244,9 +245,10 @@ router.put('/api/developer/players', requireDeveloper, async (req, res) => {
            name = COALESCE($2, name), 
            group_id = COALESCE($3, group_id), 
            current_round = COALESCE($4, current_round), 
-           player_number = COALESCE($5, player_number) 
-       WHERE id = $6`,
-      [unique_id ? unique_id.toUpperCase() : null, name, group_id ? parseInt(group_id) : null, current_round ? parseInt(current_round) : null, player_number ? parseInt(player_number) : null, pid]
+           player_number = COALESCE($5, player_number),
+           is_active = COALESCE($6, is_active) 
+       WHERE id = $7`,
+      [unique_id ? unique_id.toUpperCase() : null, name, group_id ? parseInt(group_id) : null, current_round ? parseInt(current_round) : null, player_number ? parseInt(player_number) : null, typeof is_active === 'boolean' ? is_active : null, pid]
     );
     await notifyPlayer(pid, 'student:update', { type: 'profile_updated' });
     res.json({ success: true });
@@ -536,7 +538,7 @@ router.get('/api/developer/stats', requireDeveloper, async (req, res) => {
   try {
     const stats = {};
     const [players, stamps, redemptions, groups, checkedGroups] = await Promise.all([
-      db.query('SELECT COUNT(*)::int AS cnt FROM players'),
+      db.query('SELECT COUNT(*)::int AS cnt FROM players WHERE is_active = true'),
       db.query('SELECT COUNT(*)::int AS cnt FROM stamps'),
       db.query('SELECT COUNT(*)::int AS cnt FROM redemptions'),
       db.query('SELECT COUNT(*)::int AS cnt FROM groups'),

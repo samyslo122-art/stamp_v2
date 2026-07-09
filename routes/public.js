@@ -37,10 +37,13 @@ router.get('/self-reg', async (req, res, next) => {
 // GET /player/:uniqueId — Player Portal
 router.get('/player/:uniqueId', async (req, res, next) => {
   try {
-    const { uniqueId } = req.params;
+    let { uniqueId } = req.params;
+    uniqueId = uniqueId.toUpperCase();
+    if (/^\d{1,2}$/.test(uniqueId)) uniqueId = uniqueId.padStart(3, '0');
+
     const playerResult = await db.query(
       'SELECT * FROM players WHERE unique_id = $1',
-      [uniqueId.toUpperCase()]
+      [uniqueId]
     );
     if (playerResult.rows.length === 0) {
       return res.status(404).render('error', { statusCode: 404, message: 'Player not found' });

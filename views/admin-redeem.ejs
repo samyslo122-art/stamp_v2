@@ -65,7 +65,7 @@
           <div class="p-5 space-y-4">
             <input id="playerId" type="text" maxlength="6"
               class="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-lg font-mono text-center uppercase focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all placeholder:text-slate-300"
-              placeholder="AB12C3" autocomplete="off" />
+              placeholder="001" autocomplete="off" />
             <button onclick="lookupPlayer()" class="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 active:scale-[0.97] transition-all">
               <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
               Check Eligibility
@@ -348,7 +348,7 @@
         lastScanTime = now;
         scanSuccessFlash();
         let id = text.trim();
-        const match = id.match(/\/player\/([A-Z0-9]{6})/i);
+        const match = id.match(/\/player\/([A-Z0-9]+)/i);
         if (match) id = match[1];
         document.getElementById('playerId').value = id.toUpperCase();
         lookupPlayer();

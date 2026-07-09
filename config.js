@@ -64,29 +64,54 @@ module.exports = {
         },
     ],
 
-    GROUPS: [
-        { group_code: "6V8GL2P4", quota: 18 },
-        { group_code: "E9ZBRATM", quota: 10 },
-        { group_code: "Q78VQMQP", quota: 2 },
-        { group_code: "XHSR1EF8", quota: 20 },
-        { group_code: "97G65AQJ", quota: 5 },
-        { group_code: "HX5HSNHD", quota: 100 },
-        { group_code: "9DRYH7ON", quota: 100 }, //guest
-        { group_code: "LLR4LM84", quota: 100 }, //Amb Sch
-        { group_code: "GC307EER", quota: 100 }, //Amb Sch
-        { group_code: "TIWYVYUN", quota: 100 }, //Amb Sch
-        { group_code: "5BUJ2NMR", quota: 100 }, //Amb Sch
-        { group_code: "GX756FCB", quota: 100 }, //Amb Sch
-        { group_code: "VIMF99F8", quota: 100 }, //Amb Sch
-        { group_code: "ZQYQYX45", quota: 100 }, //Amb Sch
-        { group_code: "V595O25O", quota: 100 }, //Amb Sch
-        { group_code: "7C8NEBQR", quota: 100 }, //Amb Sch
-        { group_code: "SVFCRNQH", quota: 100 }, //Amb Sch
-        { group_code: "VPPMGUDA", quota: 100 }, //Amb Sch
-        { group_code: "ERSDHU6H", quota: 100 }, //Amb Sch
-        { group_code: "FRYB263R", quota: 100 }, //Amb Sch
-        { group_code: "GGOL7ZTJ", quota: 100 }, //Amb Sch
+    // GROUPS: [
+    //     { group_code: "6V8GL2P4", quota: 18 },
+    //     { group_code: "E9ZBRATM", quota: 10 },
+    //     { group_code: "Q78VQMQP", quota: 2 },
+    //     { group_code: "XHSR1EF8", quota: 20 },
+    //     { group_code: "97G65AQJ", quota: 5 },
+    //     { group_code: "HX5HSNHD", quota: 100 },
+    //     { group_code: "9DRYH7ON", quota: 100 }, //guest
+    //     { group_code: "LLR4LM84", quota: 100 }, //Amb Sch
+    //     { group_code: "GC307EER", quota: 100 }, //Amb Sch
+    //     { group_code: "TIWYVYUN", quota: 100 }, //Amb Sch
+    //     { group_code: "5BUJ2NMR", quota: 100 }, //Amb Sch
+    //     { group_code: "GX756FCB", quota: 100 }, //Amb Sch
+    //     { group_code: "VIMF99F8", quota: 100 }, //Amb Sch
+    //     { group_code: "ZQYQYX45", quota: 100 }, //Amb Sch
+    //     { group_code: "V595O25O", quota: 100 }, //Amb Sch
+    //     { group_code: "7C8NEBQR", quota: 100 }, //Amb Sch
+    //     { group_code: "SVFCRNQH", quota: 100 }, //Amb Sch
+    //     { group_code: "VPPMGUDA", quota: 100 }, //Amb Sch
+    //     { group_code: "ERSDHU6H", quota: 100 }, //Amb Sch
+    //     { group_code: "FRYB263R", quota: 100 }, //Amb Sch
+    //     { group_code: "GGOL7ZTJ", quota: 100 }, //Amb Sch
+    // ],
+
+     GROUPS: [
+        { group_code: "6V8GL2P4", quota: 20 },
+        { group_code: "E9ZBRATM", quota: 20 },
+        { group_code: "Q78VQMQP", quota: 10 },
+        { group_code: "XHSR1EF8", quota: 30 },
+        { group_code: "97G65AQJ", quota: 10 },
+        { group_code: "HX5HSNHD", quota: 10 },
+        { group_code: "9DRYH7ON", quota: 50 }, //guest
+        { group_code: "LLR4LM84", quota: 20 }, //Amb Sch
+        { group_code: "GC307EER", quota: 20 }, //Amb Sch
+        { group_code: "TIWYVYUN", quota: 20 }, //Amb Sch
+        { group_code: "5BUJ2NMR", quota: 20 }, //Amb Sch
+        { group_code: "GX756FCB", quota: 20 }, //Amb Sch
+        { group_code: "VIMF99F8", quota: 20 }, //Amb Sch
+        { group_code: "ZQYQYX45", quota: 20 }, //Amb Sch
+        { group_code: "V595O25O", quota: 20 }, //Amb Sch
+        { group_code: "7C8NEBQR", quota: 20 }, //Amb Sch
+        { group_code: "SVFCRNQH", quota: 20 }, //Amb Sch
+        { group_code: "VPPMGUDA", quota: 20 }, //Amb Sch
+        { group_code: "ERSDHU6H", quota: 20 }, //Amb Sch
+        { group_code: "FRYB263R", quota: 20 }, //Amb Sch
+        { group_code: "GGOL7ZTJ", quota: 20 }, //Amb Sch
     ],
+
 
     RATE_LIMITS: {
         ENABLED: true,

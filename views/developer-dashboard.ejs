@@ -35,7 +35,7 @@
     <!-- Stats Row -->
     <div id="stats-banner" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Total Players</p>
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Registered Players</p>
             <h3 id="stat-players" class="text-3xl font-black text-slate-800">...</h3>
         </div>
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
@@ -163,7 +163,7 @@
         let html = '<thead><tr class="text-[10px] uppercase text-slate-400 border-b">';
         let cols = [];
 
-        if (tab === 'players') { cols = ['#', 'Name', 'UID', 'Round', 'Group', 'Actions']; }
+        if (tab === 'players') { cols = ['#', 'Name', 'UID', 'Round', 'Group', 'Status', 'Actions']; }
         else if (tab === 'stamps') { cols = ['Player', 'Booth', 'Val', 'R', 'Actions']; }
         else if (tab === 'redemptions') { cols = ['Player', 'Tier', 'Gift', 'R', 'Actions']; }
         else if (tab === 'groups') { cols = ['Code', 'Quota', 'Reg.', 'In?', 'QR', 'Actions']; }
@@ -177,7 +177,7 @@
 
         html += rows.map(r => {
             let row = '<tr class="border-b hover:bg-slate-50">';
-            if (tab === 'players') row += `<td class="py-4">${r.player_number}</td><td class="font-bold">${r.name}</td><td class="font-mono text-brand-600">${r.unique_id}</td><td>${r.current_round}</td><td>${r.group_code}</td>`;
+            if (tab === 'players') row += `<td class="py-4">${r.player_number}</td><td class="font-bold">${r.name}</td><td class="font-mono text-brand-600">${r.unique_id}</td><td>${r.current_round}</td><td>${r.group_code}</td><td>${r.is_active ? '<span class="text-emerald-600 font-bold">ACTIVE</span>' : '<span class="text-slate-400 font-bold">INACTIVE</span>'}</td>`;
             else if (tab === 'stamps') row += `<td class="font-bold">${r.player_name}</td><td>${r.booth_name}</td><td>${r.stamp_value}</td><td>${r.round_number}</td>`;
             else if (tab === 'redemptions') row += `<td class="font-bold">${r.player_name}</td><td>${r.tier_claimed}</td><td>${r.gift_name}</td><td>${r.round_number}</td>`;
             else if (tab === 'groups') row += `<td class="font-black">${r.group_code}</td><td>${r.quota}</td><td>${r.registered_count}</td><td>${r.checked_in ? 'YES' : 'NO'}</td><td><button onclick="showGroupQR('${r.group_code}')" class="text-brand-600 font-bold text-xs">QR</button></td>`;
@@ -211,7 +211,8 @@
                         <div><label class="label">Round</label><input id="m_round" class="input" type="number" value="${data?data.current_round:1}"></div>
                         <div><label class="label">Seq #</label><input id="m_pnum" class="input" type="number" value="${data?data.player_number:''}" placeholder="Auto"></div>
                      </div>
-                     <div><label class="label">UID</label><input id="m_uid" class="input" placeholder="AUTO" value="${data?data.unique_id:''}"></div>`;
+                     <div><label class="label">UID</label><input id="m_uid" class="input" placeholder="AUTO" value="${data?data.unique_id:''}"></div>
+                     <div class="flex items-center gap-2 pt-2"><input type="checkbox" id="m_active" ${data&&data.is_active?'checked':''}> <label class="label mb-0">Activated</label></div>`;
         } else if (type === 'stamp') {
             html += `<div><label class="label">Player</label><select id="m_pid" class="tom-select">${lookupData.players.map(p=>`<option value="${p.id}" ${data&&data.player_id===p.id?'selected':''}>${p.name}</option>`).join('')}</select></div>
                      <div><label class="label">Booth</label><select id="m_bk" class="tom-select">${lookupData.booths.map(b=>`<option value="${b.booth_key}" ${data&&data.booth_name===b.booth_key?'selected':''}>${b.name}</option>`).join('')}</select></div>
@@ -254,7 +255,7 @@
         let method = currentEditId ? 'PUT' : 'POST';
         let endpoint = `/api/developer/${currentModalType}s`;
 
-        if (currentModalType === 'player') body = { ...body, unique_id: document.getElementById('m_uid').value, name: document.getElementById('m_name').value, group_id: document.getElementById('m_gid').value, current_round: document.getElementById('m_round').value, player_number: document.getElementById('m_pnum').value || null };
+        if (currentModalType === 'player') body = { ...body, unique_id: document.getElementById('m_uid').value, name: document.getElementById('m_name').value, group_id: document.getElementById('m_gid').value, current_round: document.getElementById('m_round').value, player_number: document.getElementById('m_pnum').value || null, is_active: document.getElementById('m_active').checked };
         else if (currentModalType === 'stamp') body = { ...body, player_id: document.getElementById('m_pid').value, booth_name: document.getElementById('m_bk').value, round_number: document.getElementById('m_round').value };
         else if (currentModalType === 'group') body = { ...body, group_code: document.getElementById('m_code').value, quota: document.getElementById('m_quota').value, checked_in: document.getElementById('m_checked').checked };
         else if (currentModalType === 'gift') body = { ...body, tier: document.getElementById('m_tier').value, gift_name: document.getElementById('m_name').value, remaining_qty: document.getElementById('m_rem').value, total_qty: document.getElementById('m_total').value };

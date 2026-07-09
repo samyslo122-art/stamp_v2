@@ -70,75 +70,41 @@ router.post("/api/admin/groups/checkin", requireAdmin, async (req, res) => {
     }
 });
 
-// POST /api/admin/players/create — Manual player creation
-router.post("/api/admin/players/create", requireAdmin, async (req, res) => {
+// POST /api/admin/players/activate — Manual player activation
+router.post("/api/admin/players/activate", requireAdmin, async (req, res) => {
     const client = await db.getClient();
     try {
-        const { groupCode } = req.body;
-        if (!groupCode)
-            return res.status(400).json({ error: "Group code required" });
+        let { playerId } = req.body;
+        if (!playerId)
+            return res.status(400).json({ error: "Player ID required" });
+
+        if (/^\d{1,2}$/.test(playerId)) playerId = playerId.padStart(3, '0');
 
         await client.query("BEGIN");
 
-        const groupResult = await client.query(
-            "SELECT * FROM groups WHERE group_code = $1 FOR UPDATE",
-            [groupCode.toUpperCase()],
+        const playerResult = await client.query(
+            "SELECT * FROM players WHERE unique_id = $1 FOR UPDATE",
+            [playerId.toUpperCase()],
         );
-        if (groupResult.rows.length === 0) {
+        if (playerResult.rows.length === 0) {
             await client.query("ROLLBACK");
-            return res.status(400).json({ error: "Invalid group code" });
+            return res.status(404).json({ error: "Player not found" });
         }
-        const group = groupResult.rows[0];
+        const player = playerResult.rows[0];
 
-        if (!group.checked_in) {
-            await client.query("ROLLBACK");
-            return res.status(400).json({ error: "Group not checked in yet" });
-        }
-
-        const countResult = await client.query(
-            "SELECT COUNT(*)::int AS cnt FROM players WHERE group_id = $1",
-            [group.id],
-        );
-        if (countResult.rows[0].cnt >= group.quota) {
-            await client.query("ROLLBACK");
-            return res.status(400).json({ error: "Group quota full" });
-        }
-
-        const seqResult = await client.query(
-            "SELECT nextval('player_number_seq')::int AS num",
-        );
-        const playerNumber = seqResult.rows[0].num;
-        const playerName = formatPlayerName(playerNumber);
-
-        let uniqueId;
-        let attempts = 0;
-        while (attempts < 20) {
-            uniqueId = generateUniqueId();
-            const existing = await client.query(
-                "SELECT id FROM players WHERE unique_id = $1",
-                [uniqueId],
+        if (!player.is_active) {
+            await client.query(
+                "UPDATE players SET is_active = true WHERE id = $1",
+                [player.id]
             );
-            if (existing.rows.length === 0) break;
-            attempts++;
         }
-        if (attempts >= 20) {
-            await client.query("ROLLBACK");
-            return res
-                .status(500)
-                .json({ error: "Failed to generate unique ID" });
-        }
-
-        await client.query(
-            "INSERT INTO players (player_number, unique_id, name, group_id) VALUES ($1, $2, $3, $4)",
-            [playerNumber, uniqueId, playerName, group.id],
-        );
 
         await client.query("COMMIT");
-        res.json({ uniqueId, name: playerName, playerNumber });
+        res.json({ uniqueId: player.unique_id, name: player.name, playerNumber: player.player_number, newlyActivated: !player.is_active });
     } catch (err) {
         await client.query("ROLLBACK");
-        console.error("Admin player create error:", err);
-        res.status(500).json({ error: "Failed to create player" });
+        console.error("Admin player activate error:", err);
+        res.status(500).json({ error: "Failed to activate player" });
     } finally {
         client.release();
     }
@@ -189,11 +155,13 @@ router.get("/api/admin/players/search", requireAdmin, async (req, res) => {
 // POST /api/admin/stamps/issue
 router.post("/api/admin/stamps/issue", requireAdmin, async (req, res) => {
     try {
-        const { boothKey, uniqueId } = req.body;
+        let { boothKey, uniqueId } = req.body;
         if (!boothKey || !uniqueId)
             return res
                 .status(400)
                 .json({ error: "Booth and player ID required" });
+
+        if (/^\d{1,2}$/.test(uniqueId)) uniqueId = uniqueId.padStart(3, '0');
 
         const booth = await getBoothByKey(boothKey);
         if (!booth) return res.status(400).json({ error: "Invalid booth" });
@@ -251,11 +219,13 @@ router.post("/api/admin/stamps/issue", requireAdmin, async (req, res) => {
 // POST /api/admin/stamps/revoke
 router.post("/api/admin/stamps/revoke", requireAdmin, async (req, res) => {
     try {
-        const { boothKey, uniqueId } = req.body;
+        let { boothKey, uniqueId } = req.body;
         if (!boothKey || !uniqueId)
             return res
                 .status(400)
                 .json({ error: "Booth and player ID required" });
+
+        if (/^\d{1,2}$/.test(uniqueId)) uniqueId = uniqueId.padStart(3, '0');
 
         const booth = await getBoothByKey(boothKey);
         if (!booth) return res.status(400).json({ error: "Invalid booth" });
@@ -301,9 +271,11 @@ router.post("/api/admin/redemption/lookup", requireAdmin, async (req, res) => {
         session: req.session?.isAdmin,
     });
     try {
-        const { uniqueId } = req.body;
+        let { uniqueId } = req.body;
         if (!uniqueId)
             return res.status(400).json({ error: "Player ID required" });
+
+        if (/^\d{1,2}$/.test(uniqueId)) uniqueId = uniqueId.padStart(3, '0');
 
         const playerResult = await db.query(
             "SELECT * FROM players WHERE unique_id = $1",
@@ -374,12 +346,14 @@ router.post("/api/admin/redemption/claim", requireAdmin, async (req, res) => {
         session: req.session?.isAdmin,
     });
     try {
-        const { uniqueId, tierKey, giftName } = req.body;
+        let { uniqueId, tierKey, giftName } = req.body;
         if (!uniqueId || !tierKey || !giftName) {
             return res
                 .status(400)
                 .json({ error: "Player ID, tier, and gift required" });
         }
+
+        if (/^\d{1,2}$/.test(uniqueId)) uniqueId = uniqueId.padStart(3, '0');
 
         const playerResult = await db.query(
             "SELECT * FROM players WHERE unique_id = $1",
@@ -418,9 +392,11 @@ router.post("/api/admin/redemption/claim", requireAdmin, async (req, res) => {
 // POST /api/admin/rounds/reset
 router.post("/api/admin/rounds/reset", requireAdmin, async (req, res) => {
     try {
-        const { uniqueId } = req.body;
+        let { uniqueId } = req.body;
         if (!uniqueId)
             return res.status(400).json({ error: "Player ID required" });
+
+        if (/^\d{1,2}$/.test(uniqueId)) uniqueId = uniqueId.padStart(3, '0');
 
         const playerResult = await db.query(
             "SELECT * FROM players WHERE unique_id = $1",

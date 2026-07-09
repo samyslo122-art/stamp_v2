@@ -14,7 +14,7 @@ router.post("/admin/login", (req, res) => {
     const { pin } = req.body;
     if (pin === process.env.ADMIN_PIN) {
         req.session.isAdmin = true;
-        return res.redirect("/admin/group-checkin");
+        return res.redirect("/admin/counter");
     }
     db.query(
         "INSERT INTO security_logs (event_type, ip_address, details) VALUES ($1, $2, $3)",

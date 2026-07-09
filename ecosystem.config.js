@@ -17,7 +17,7 @@ module.exports = {
     },
     {
       name: 'cloudflare-tunnel',
-      script: './cloudflared.exe',
+      script: '/usr/local/bin/cloudflared',
       args: 'tunnel --url http://localhost:3000 --protocol http2',
       autorestart: true,
       watch: false,
