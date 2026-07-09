@@ -41,7 +41,7 @@ module.exports = {
             requiredStamps: 2,
             minCategories: 1,
             requireAllCategories: false,
-            gifts: [{ name: "Pen", qty: 100 }],
+            gifts: [{ name: "Pen", qty: 1000 }],
         },
         {
             key: "tier2",
@@ -50,8 +50,8 @@ module.exports = {
             minCategories: 1,
             requireAllCategories: false,
             gifts: [
-                { name: "Bookmark", qty: 100 },
-                { name: "Keyboard Clicker", qty: 100 },
+                { name: "Bookmark", qty: 500 },
+                { name: "Keyboard Clicker", qty: 500 },
             ],
         },
         {
@@ -60,7 +60,7 @@ module.exports = {
             requiredStamps: 6,
             minCategories: 1,
             requireAllCategories: false,
-            gifts: [{ name: "Coin", qty: 100 }],
+            gifts: [{ name: "Coin", qty: 1000 }],
         },
     ],
 
@@ -88,7 +88,7 @@ module.exports = {
     //     { group_code: "GGOL7ZTJ", quota: 100 }, //Amb Sch
     // ],
 
-     GROUPS: [
+    GROUPS: [
         { group_code: "6V8GL2P4", quota: 20 },
         { group_code: "E9ZBRATM", quota: 20 },
         { group_code: "Q78VQMQP", quota: 10 },
@@ -111,7 +111,6 @@ module.exports = {
         { group_code: "FRYB263R", quota: 20 }, //Amb Sch
         { group_code: "GGOL7ZTJ", quota: 20 }, //Amb Sch
     ],
-
 
     RATE_LIMITS: {
         ENABLED: true,
