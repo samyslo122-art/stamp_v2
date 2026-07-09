@@ -1,2 +1,14 @@
 delete entire db:
 docker compose down -v
+
+# PM2 Logs
+pm2 logs                       # tail all logs live
+pm2 logs event-passport        # app logs only
+pm2 logs cloudflare-tunnel     # tunnel logs only
+pm2 logs --lines 100           # show last 100 lines
+# Or check log files directly:
+#   logs/app-out.log, logs/app-error.log
+#   logs/tunnel-out.log, logs/tunnel-error.log
+
+# Direct SQL access (via Docker)
+docker exec -it event_passport_db psql -U event_user -d school_event
