@@ -1,3 +1,6 @@
+# Change to project root
+Set-Location $PSScriptRoot/..
+
 Write-Host "==================================================" -ForegroundColor Cyan
 Write-Host "Cleaning up environment..." -ForegroundColor Cyan
 Write-Host "==================================================" -ForegroundColor Cyan
@@ -14,10 +17,19 @@ Write-Host "Ensuring database container is running..." -ForegroundColor Yellow
 docker compose -f "$PSScriptRoot/../docker-compose.yml" up -d postgres
 
 Write-Host "Waiting for PostgreSQL to accept connections..." -ForegroundColor Yellow
-Start-Sleep -Seconds 3
+do {
+  $ready = docker exec event_passport_db pg_isready -U event_user -d school_event 2>$null
+  if (-not $ready) { Start-Sleep -Seconds 1 }
+} while (-not $ready)
+Write-Host "PostgreSQL is ready." -ForegroundColor Green
+
+Write-Host "Initializing database schema..." -ForegroundColor Yellow
+node -e "require('./db').initSchema()"
+
+Write-Host "Seeding database from config.js..." -ForegroundColor Yellow
+node helpers/seed.js
 
 Write-Host "Starting PM2 processes..." -ForegroundColor Yellow
-Set-Location $PSScriptRoot/..
 pm2 start ecosystem.config.js
 
 Write-Host "Waiting for Cloudflare Tunnel to establish..." -ForegroundColor Yellow

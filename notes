@@ -1,0 +1,2 @@
+delete entire db:
+docker compose down -v
