@@ -17,7 +17,7 @@ module.exports = {
     },
     {
       name: 'cloudflare-tunnel',
-      script: '/usr/local/bin/cloudflared',
+      script: process.platform === 'win32' ? './cloudflared.exe' : '/usr/local/bin/cloudflared',
       args: 'tunnel --url http://localhost:3000 --protocol http2',
       autorestart: true,
       watch: false,
