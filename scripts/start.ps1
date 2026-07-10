@@ -5,7 +5,8 @@ Write-Host "==================================================" -ForegroundColor
 Write-Host "Cleaning up environment..." -ForegroundColor Cyan
 Write-Host "==================================================" -ForegroundColor Cyan
 
-Get-Process -Id (Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue).OwningProcess -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+$tcpConn = Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue
+if ($tcpConn) { $tcpConn.OwningProcess | Stop-Process -Force -ErrorAction SilentlyContinue }
 pm2 delete all 2>$null
 
 Write-Host ""
@@ -24,7 +25,17 @@ do {
 Write-Host "PostgreSQL is ready." -ForegroundColor Green
 
 Write-Host "Initializing database schema..." -ForegroundColor Yellow
-node -e "require('./db').initSchema()"
+$schemaRetries = 0
+do {
+  $schemaRetries++
+  node -e "require('./db').initSchema()" 2>$null
+  $schemaOk = $LASTEXITCODE -eq 0
+  if (-not $schemaOk) {
+    Write-Host "Schema init failed (attempt $schemaRetries/5), retrying in 2s..." -ForegroundColor Yellow
+    Start-Sleep -Seconds 2
+  }
+} while (-not $schemaOk -and $schemaRetries -lt 5)
+if (-not $schemaOk) { Write-Host "Schema init failed after 5 attempts." -ForegroundColor Red; exit 1 }
 
 Write-Host "Seeding database from config.js..." -ForegroundColor Yellow
 node helpers/seed.js
